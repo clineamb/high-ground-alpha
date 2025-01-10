@@ -13,19 +13,21 @@ export default function(io) {
 
   // GAME MESSAGES
   io.on('connect', socket => {
-    socket.on('message', message => {
-      log(message.label, socket.id, message);
-      switch(message.label) {
+    socket.on('message', data => {
+      log(data.label, socket.id, data);
+      switch(data.label) {
         case '#game_connection':
           // handle connection
           
           break;
         case 'select_move':
-          socket.broadcast.emit('message', {
-            ...messsage,
-            label: 'broadcast:select_move',
-            newSocketId: socket.id,
-          });
+          if(data) {
+            socket.broadcast.emit('message', {
+              ...data,
+              label: 'broadcast:select_move',
+              newSocketId: socket.id,
+            });
+          }
           break;
         default:
           console.log('UNHANDLED:\n', socket.id, message);

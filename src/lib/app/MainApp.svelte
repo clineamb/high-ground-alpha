@@ -16,6 +16,14 @@
   let username = $derived(displayName ? displayName.toLowerCase().replaceAll(' ', '_') : 'guest');
   let game = gameState();
 
+  function getClientPlayerDetails() {
+    const u = $state.snapshot(username);
+    const dn = $state.snapshot(displayName);
+    return JSON.stringify({
+      username: u,
+      displayName: dn
+    });
+  }
 
   onMount(() => {
     socket = skio.get();
@@ -26,13 +34,11 @@
     } else {
       displayName = cookie.get('displayName');
     }
-
+    
+    game.addPlayer(getClientPlayerDetails(), true);
     sendGameMessage(socket, {
       label: '#game_connection',
-      user: {
-        displayName,
-        username
-      },
+      user: getClientPlayerDetails()
     });
     // receive server messages and send events
     socket.on('message', message => injestGameMessage(socket, message));
@@ -56,10 +62,15 @@
   function selectMove(moveKey) {
     if(socket) {
       let newMove = game.makeMove(username, moveKey);
-      sendGameMessage(socket, {
-        label: "select_move",
-        move: newMove
-      });
+      if(!!newMove.doNotSend) {
+        sendGameMessage(socket, {
+          label: "select_move",
+          move: newMove,
+          fromUsername: username
+        });
+      } else {
+        alert('You selected your move already...');
+      }
     }
   }
 

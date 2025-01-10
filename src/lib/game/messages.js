@@ -5,9 +5,12 @@ export const injestGameMessage = function(socket, message) {
 };
 
 export const sendGameMessage = function(socket, message) {
-  socket.emit('message', {
-    ...message,
-    fromSockId: socket.id,
-    timestamp: Date.now(),
-  });
+  if(!message) {
+    console.log('>> Did not send, no message...');
+  } else {
+    socket.emit('message', {
+      ...message,
+      timestamp: Date.now(),
+    });
+  }
 }
