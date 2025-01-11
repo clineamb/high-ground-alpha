@@ -7,7 +7,7 @@ function log(label, socketId, allData) {
   );
 }
 
-// main injest
+// SERVER INJEST
 export default function(io) {
   if(browser) { return; }
 
@@ -16,21 +16,31 @@ export default function(io) {
     socket.on('message', data => {
       log(data.label, socket.id, data);
       switch(data.label) {
-        case '#game_connection':
+        case 'game_connection':
+        case 'player_sync':
           // handle connection
-          
-          break;
+          // broadcast the move out
+          let parsedUserData = JSON.parse(data.user);
+          socket.broadcast.emit('message', {
+            ...data,
+            user: parsedUserData,
+            label: 'broadcast:player_joined',
+          });
+        break;
         case 'select_move':
-          if(data) {
-            socket.broadcast.emit('message', {
-              ...data,
-              label: 'broadcast:select_move',
-              newSocketId: socket.id,
-            });
-          }
-          break;
+          socket.broadcast.emit('message', {
+            ...data,
+            label: 'broadcast:move_selected',
+          });
+        break;
+        // case 'sync_game':
+        //   socket.broadcast.emit('message', {
+        //     ...data,
+        //     label: 'broadcast:sync_game'
+        //   });
+        // break;
         default:
-          console.log('UNHANDLED:\n', socket.id, message);
+          console.log('UNHANDLED:\n', socket.id, data);
       }
     });
     socket.on('disconnect', data => {

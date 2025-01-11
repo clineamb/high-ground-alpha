@@ -24,6 +24,30 @@
       displayName: dn
     });
   }
+  
+  function incomingMessageHandler(label, data, isBroadcast = false) {
+    switch(label) {
+      case 'player_joined':
+        if(data.user.username !== username && !game.findPlayer(data.user.username)) {
+          game.addPlayer(JSON.stringify(data.user));
+          sendGameMessage(socket, {
+            label: 'player_sync',
+            user: getClientPlayerDetails(),
+            fromSocketId: userSockId
+          });
+          alert(data.user.displayName + ' joined!');
+        }
+      break;
+      case 'move_selected':
+        // make sure we're not getting our own move
+        if(data.fromUsername !== username) {
+          game.receiveMove(data.move);
+        }
+      break;
+      default:
+        console.log('>> unhandled on client', data);
+    }
+  }
 
   onMount(() => {
     socket = skio.get();
@@ -31,42 +55,35 @@
     
     if(!displayName && !cookie.get('displayName')) {
       displayName = prompt('Username');
+      cookie.set('displayName', displayName);
     } else {
       displayName = cookie.get('displayName');
     }
     
     game.addPlayer(getClientPlayerDetails(), true);
     sendGameMessage(socket, {
-      label: '#game_connection',
-      user: getClientPlayerDetails()
+      label: 'game_connection',
+      user: getClientPlayerDetails(),
+      fromSocketId: socket.id
     });
     // receive server messages and send events
-    socket.on('message', message => injestGameMessage(socket, message));
-  });
-
-  $effect(() => {
-    if(displayName.length <= 0) {
-      displayName = prompt('Usermame please...');
-    }
+    socket.on('message', message => injestGameMessage(socket, message, incomingMessageHandler));
   });
 
   $effect(() => {
     if(username.length > 0 && !cookie.get('username')) {
       cookie.set('username', username);
     }
-    if(displayName.length > 0 && !cookie.get('displayName')) {
-      cookie.set('displayName', displayName);
-    }
   });
 
   function selectMove(moveKey) {
     if(socket) {
       let newMove = game.makeMove(username, moveKey);
-      if(!!newMove.doNotSend) {
+      if(newMove.doNotSend !== true) {
         sendGameMessage(socket, {
           label: "select_move",
           move: newMove,
-          fromUsername: username
+          fromUsername: $state.snapshot(username)
         });
       } else {
         alert('You selected your move already...');
@@ -74,16 +91,43 @@
     }
   }
 
+  function revealCurrentMoves() {
+    
+  }
+
+  function moveToNextRound() {
+
+  }
+
 </script>
 
 {#if !displayName}
   <h1>Waiting on user input...</h1>
 {:else}
-  <h1>User {displayName}</h1>
+  <h1>You Are: {displayName}</h1>
 {/if}
 
-<!-- <p>{data.post.content}</p> -->
+<div class="move-actions">
+  <h3>Take a stance...</h3>
+  <MoveBtn moveCallback={() => selectMove('thrust')}>Thrust</MoveBtn>
+  <MoveBtn moveCallback={() => selectMove('feint')}>Feint</MoveBtn>
+  <MoveBtn moveCallback={() => selectMove('parry')}>Parry</MoveBtn>
+</div>
+<div class="meta-actions">
+  <h3>Go on then.</h3>
+  <MoveBtn moveCallback={revealCurrentMoves}>Reveal Moves</MoveBtn>
+  <MoveBtn moveCallback={moveToNextRound}>Move to Next Round</MoveBtn>
+</div>
 
-<MoveBtn moveCallback={() => selectMove('thrust')}>Thrust</MoveBtn>
-<MoveBtn moveCallback={() => selectMove('feint')}>Feint</MoveBtn>
-<MoveBtn moveCallback={() => selectMove('parry')}>Parry</MoveBtn>
+<h2>Active Players</h2>
+<ul>
+  {#each game.players as player (player.username)}
+    <li>{player.displayName}</li>
+  {/each}
+</ul>
+
+<style>
+  div {
+    margin: 1rem 0;
+  }
+</style>
