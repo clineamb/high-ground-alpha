@@ -48,6 +48,10 @@
         }
       break;
       case 'start_game':
+        console.log('>> starting game?', data);
+        if(data.sync) {
+          game.overrideGame(data.gameObj);
+        }
         startGame();
       break;
       default:
@@ -107,9 +111,9 @@
 
   function startGame() {
     if(!game.started) {
-      game.started = true;
+      game.startGame();
       sendGameMessage(socket, {
-        label: 'start_game'
+        label: 'start_game',
       });
     }
   }
@@ -144,6 +148,16 @@
   <ul>
     {#each game.players as player (player.username)}
       <li>{player.displayName}</li>
+    {/each}
+  </ul>
+</div>
+
+<div>
+  <h3>Log</h3>
+  <ul>
+    {#each game.log as l (l.timestamp)} 
+    {@const timestr = new Date(l.timestamp).toString() }
+    <li>{l.msg} ({timestr})</li>
     {/each}
   </ul>
 </div>

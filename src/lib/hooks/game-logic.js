@@ -30,20 +30,16 @@ export default function(io) {
         case 'select_move':
           socket.broadcast.emit('message', {
             ...data,
-            label: 'broadcast:move_selected',
+            label: `broadcast:move_selected`
           });
         break;
         case 'start_game':
+        case 'sync_game':
           socket.broadcast.emit('message', {
-            label: 'broadcast:start_game'
+            ...data,
+            label: `broadcast:${data.label}`
           });
         break;
-        // case 'sync_game':
-        //   socket.broadcast.emit('message', {
-        //     ...data,
-        //     label: 'broadcast:sync_game'
-        //   });
-        // break;
         default:
           console.log('UNHANDLED:\n', socket.id, data);
       }

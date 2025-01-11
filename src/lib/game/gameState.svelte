@@ -23,6 +23,7 @@
           this.moves = storedGame.moves;
           this.turnIdx = storedGame.turnIdx;
           this.lastUpdated = storedGame.lastUpdated;
+          this.started = storedGame.started;
           this.touch();
         }
       }
@@ -32,6 +33,23 @@
           this.store.value = this.makeGameInfoObj();
         }
       });
+    }
+    addLog(msg, timestampOverride) {
+      let timestamp = Date.now();
+      if(timestampOverride) {
+        timestamp = timestampOverride;
+      }
+      this.log.push({ msg, timestamp });
+      this.log.sort((a, b) => b.timestamp - a.timestamp);
+      this.touch();
+    }
+
+    startGame() {
+      if(!this.started) {
+        this.started = true;
+        this.updateTimestamp();
+        this.addLog('Game started');
+      }
     }
 
     // PLAYER RELATED ===========
@@ -46,6 +64,7 @@
         userObj.created = Date.now();
         this.players.push(userObj);
         existingUser = userObj;
+        this.addLog(`${userObj.displayName} joined.`, userObj.created);
       }
       if(isClientPlayer && !this.clientPlayer) {
         this.clientPlayer = existingUser;
@@ -96,15 +115,24 @@
       this.touch();
       this.lastUpdated = Date.now();
     }
+
+    // overrideGame(newGameObj) {
+    //   this.moves = newGameObj.moves;
+    //   this.turnIdx = newGameObj.turnIdx;
+    //   this.players = newGameObj.players;
+    //   this.lastUpdated = newGameObj.lastUpdated;
+    // }
     // OBJECT BUILDERS ==========
     makeGameInfoObj() {
       // to make an obj that doesn't include store
       // don't send clientplayer or store
       return {
-        players: this.players,
+        players: [].concat(this.players),
         moves: this.moves,
         turnIdx: this.turnIdx,
         lastUpdated: this.lastUpdated,
+        started: this.started,
+        log: this.log,
       };
     }
     makeMoveObj(username, key, priority = false) {
