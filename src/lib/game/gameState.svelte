@@ -2,18 +2,6 @@
   import { browser } from '$app/environment';
   import { localStore } from '$lib/components/localStore.svelte';
 
-  export class Player {
-    username = $state('')
-    displayName = $state('')
-    priority = $state(false)
-    points = $state(0);
-
-    constructor(displayName) {
-      this.displayName = displayName;
-      this.created = Date.now();
-    }
-  }
-
   export class GameState {
     clientPlayer = $state(null)
     lastTouchTime = $state(null);
@@ -23,6 +11,7 @@
     players = $state([])
     turnIdx = $state(0)
     store = $state(null)
+    started = $state(false)
   
     constructor() {
       if(browser) {

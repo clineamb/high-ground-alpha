@@ -33,6 +33,11 @@ export default function(io) {
             label: 'broadcast:move_selected',
           });
         break;
+        case 'start_game':
+          socket.broadcast.emit('message', {
+            label: 'broadcast:start_game'
+          });
+        break;
         // case 'sync_game':
         //   socket.broadcast.emit('message', {
         //     ...data,

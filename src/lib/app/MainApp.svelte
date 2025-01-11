@@ -16,6 +16,9 @@
   let username = $derived(displayName ? displayName.toLowerCase().replaceAll(' ', '_') : 'guest');
   let game = gameState();
 
+  // dervied from game state helpers
+  let gameStarted = $derived(game?.started)
+
   function getClientPlayerDetails() {
     const u = $state.snapshot(username);
     const dn = $state.snapshot(displayName);
@@ -43,6 +46,9 @@
         if(data.fromUsername !== username) {
           game.receiveMove(data.move);
         }
+      break;
+      case 'start_game':
+        startGame();
       break;
       default:
         console.log('>> unhandled on client', data);
@@ -99,6 +105,15 @@
 
   }
 
+  function startGame() {
+    if(!game.started) {
+      game.started = true;
+      sendGameMessage(socket, {
+        label: 'start_game'
+      });
+    }
+  }
+
 </script>
 
 {#if !displayName}
@@ -107,24 +122,31 @@
   <h1>You Are: {displayName}</h1>
 {/if}
 
-<div class="move-actions">
-  <h3>Take a stance...</h3>
-  <MoveBtn moveCallback={() => selectMove('thrust')}>Thrust</MoveBtn>
-  <MoveBtn moveCallback={() => selectMove('feint')}>Feint</MoveBtn>
-  <MoveBtn moveCallback={() => selectMove('parry')}>Parry</MoveBtn>
-</div>
-<div class="meta-actions">
-  <h3>Go on then.</h3>
-  <MoveBtn moveCallback={revealCurrentMoves}>Reveal Moves</MoveBtn>
-  <MoveBtn moveCallback={moveToNextRound}>Move to Next Round</MoveBtn>
-</div>
+{#if gameStarted}
+  <div class="move-actions">
+    <h3>Take a stance...</h3>
+    <MoveBtn moveCallback={() => selectMove('thrust')}>Thrust</MoveBtn>
+    <MoveBtn moveCallback={() => selectMove('feint')}>Feint</MoveBtn>
+    <MoveBtn moveCallback={() => selectMove('parry')}>Parry</MoveBtn>
+  </div>
+  <div class="meta-actions">
+    <h3>Go on then.</h3>
+    <MoveBtn moveCallback={revealCurrentMoves}>Reveal Moves</MoveBtn>
+    <MoveBtn moveCallback={moveToNextRound}>Move to Next Round</MoveBtn>
+  </div>
+{/if}
 
-<h2>Active Players</h2>
-<ul>
-  {#each game.players as player (player.username)}
-    <li>{player.displayName}</li>
-  {/each}
-</ul>
+<div>
+  {#if !gameStarted}
+  <MoveBtn moveCallback={startGame} disabled={game}>Start Game</MoveBtn>
+  {/if}
+  <h2>Active Players</h2>
+  <ul>
+    {#each game.players as player (player.username)}
+      <li>{player.displayName}</li>
+    {/each}
+  </ul>
+</div>
 
 <style>
   div {
