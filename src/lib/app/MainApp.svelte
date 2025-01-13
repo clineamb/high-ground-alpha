@@ -15,6 +15,7 @@
   let displayName = $state('');
   let username = $derived(displayName ? displayName.toLowerCase().replaceAll(' ', '_') : 'guest');
   let game = gameState();
+  let whoHasPriority = $derived(game.priorityUser);
 
   // dervied from game state helpers
   let gameStarted = $derived(game?.started)
@@ -48,10 +49,7 @@
         }
       break;
       case 'start_game':
-        console.log('>> starting game?', data);
-        if(data.sync) {
-          game.overrideGame(data.gameObj);
-        }
+        game.setPriority(data.firstPlayer);
         startGame();
       break;
       default:
@@ -111,9 +109,12 @@
 
   function startGame() {
     if(!game.started) {
+      let usernameStr = '' + $state.snapshot(username);
+      game.setPriority(usernameStr);
       game.startGame();
       sendGameMessage(socket, {
         label: 'start_game',
+        firstPlayer: usernameStr
       });
     }
   }
@@ -142,12 +143,12 @@
 
 <div>
   {#if !gameStarted}
-  <MoveBtn moveCallback={startGame} disabled={game}>Start Game</MoveBtn>
+  <MoveBtn moveCallback={startGame} disabled={game}>Start Game (I'm First Player)</MoveBtn>
   {/if}
   <h2>Active Players</h2>
   <ul>
     {#each game.players as player (player.username)}
-      <li>{player.displayName}</li>
+      <li style:background-color={whoHasPriority === player.username ? 'yellow' : 'transparent'}>{player.displayName}</li>
     {/each}
   </ul>
 </div>

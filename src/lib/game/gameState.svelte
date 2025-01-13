@@ -12,6 +12,7 @@
     turnIdx = $state(0)
     store = $state(null)
     started = $state(false)
+    priorityUser = $state('')
   
     constructor() {
       if(browser) {
@@ -24,6 +25,7 @@
           this.turnIdx = storedGame.turnIdx;
           this.lastUpdated = storedGame.lastUpdated;
           this.started = storedGame.started;
+          this.priorityUser = storedGame.priorityUser;
           this.touch();
         }
       }
@@ -50,6 +52,10 @@
         this.updateTimestamp();
         this.addLog('Game started');
       }
+    }
+
+    setPriority(username) {
+      this.priorityUser = username;
     }
 
     // PLAYER RELATED ===========
@@ -115,13 +121,6 @@
       this.touch();
       this.lastUpdated = Date.now();
     }
-
-    // overrideGame(newGameObj) {
-    //   this.moves = newGameObj.moves;
-    //   this.turnIdx = newGameObj.turnIdx;
-    //   this.players = newGameObj.players;
-    //   this.lastUpdated = newGameObj.lastUpdated;
-    // }
     // OBJECT BUILDERS ==========
     makeGameInfoObj() {
       // to make an obj that doesn't include store
@@ -133,6 +132,7 @@
         lastUpdated: this.lastUpdated,
         started: this.started,
         log: this.log,
+        priorityUser: this.priorityUser
       };
     }
     makeMoveObj(username, key, priority = false) {
