@@ -45,7 +45,6 @@
       this.log.sort((a, b) => b.timestamp - a.timestamp);
       this.touch();
     }
-
     startGame() {
       if(!this.started) {
         this.started = true;
@@ -53,11 +52,18 @@
         this.addLog('Game started');
       }
     }
-
     setPriority(username) {
       this.priorityUser = username;
+      this.updateTimestamp();
     }
-
+    swapPriority() {
+      let nextPrio = this.players.filter(p => p.username !== this.priorityUser);
+      if(nextPrio[0]) {
+        this.setPriority($state.snapshot(nextPrio[0]));
+      } else {
+        console.log('>> ERROR ANOTHER PLAYER NOT FOUND?');
+      }
+    }
     // PLAYER RELATED ===========
     findPlayer(username) {
       this.touch();
@@ -83,7 +89,7 @@
       return this.moves.find(cb);
     }
     getCurrMoves() {
-      return this.moves.filter(m => m.turnIDx === this.turnIdx);
+      return this.moves.filter(m => m.turn === this.turnIdx);
     }
     makeMove(username, moveKey) {
       let moveObj = this.makeMoveObj(username, moveKey);
@@ -108,12 +114,29 @@
         this.updateTimestamp();
       }
     }
+    areMovesReady() {
+      let cms = this.getCurrMoves();
+      return cms.length === this.players.length;
+    }
+    // REVEAL ==========
+    revealRound() {
+      let currMoves = this.getCurrMoves();
+      console.lg
+      currMoves.forEach(m => {
+        m.revealed = true;
+      });
+      this.updateTimestamp();
+    }
     // TURN PROGRESSION =========
-    nextTurn() {
+    updateTurnIdx() {
       this.turnIdx++;
+      this.updateTimestamp();
       return this.turnIdx;
     }
-
+    goToNextTurn() {
+      this.swapPriority();
+      this.updateTurnIdx();
+    }
     touch() {
       this.lastTouchTime = Date.now();
     }
@@ -131,7 +154,7 @@
         turnIdx: this.turnIdx,
         lastUpdated: this.lastUpdated,
         started: this.started,
-        log: this.log,
+        // log: this.log,
         priorityUser: this.priorityUser
       };
     }

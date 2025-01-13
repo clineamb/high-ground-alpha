@@ -35,6 +35,7 @@ export default function(io) {
         break;
         case 'start_game':
         case 'sync_game':
+          case 'reveal_moves':
           socket.broadcast.emit('message', {
             ...data,
             label: `broadcast:${data.label}`

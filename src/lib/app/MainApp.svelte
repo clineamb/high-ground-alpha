@@ -9,6 +9,7 @@
   } from '$lib/game/messages';
   import { gameState } from '$lib/game/gameState.svelte';
   import MoveBtn from '$lib/components/MoveBtn.svelte';
+	import gameLogic from '$lib/hooks/game-logic';
 
   let socket = $state(null);
   let userSockId = $state('unmounted');
@@ -16,6 +17,11 @@
   let username = $derived(displayName ? displayName.toLowerCase().replaceAll(' ', '_') : 'guest');
   let game = gameState();
   let whoHasPriority = $derived(game.priorityUser);
+  let myPriority = $derived(whoHasPriority === $state.snapshot(username));
+  let moveSelected = $state(false);
+  let revealReady = $derived(moveSelected && game.areMovesReady());
+  let movesRevealed = $state(false);
+  let displayMoves = $state([])
 
   // dervied from game state helpers
   let gameStarted = $derived(game?.started)
@@ -27,6 +33,11 @@
       username: u,
       displayName: dn
     });
+  }
+
+  function resetLocalRound() {
+    moveSelected = false;
+    movesRevealed = false;
   }
   
   function incomingMessageHandler(label, data, isBroadcast = false) {
@@ -50,7 +61,11 @@
       break;
       case 'start_game':
         game.setPriority(data.firstPlayer);
-        startGame();
+        game.startGame();
+      break;
+      case 'reveal_moves':
+        movesRevealed = true;
+        game.revealRound();
       break;
       default:
         console.log('>> unhandled on client', data);
@@ -72,7 +87,6 @@
     sendGameMessage(socket, {
       label: 'game_connection',
       user: getClientPlayerDetails(),
-      fromSocketId: socket.id
     });
     // receive server messages and send events
     socket.on('message', message => injestGameMessage(socket, message, incomingMessageHandler));
@@ -84,9 +98,21 @@
     }
   });
 
+  $effect(() => {
+    displayMoves = game.moves
+      .filter(m => m.turn === game.turnIdx)
+      .map(m => {
+        return {
+          ...m,
+          'player': game.findPlayer(m.username)
+        };
+    });
+  });
+
   function selectMove(moveKey) {
     if(socket) {
-      let newMove = game.makeMove(username, moveKey);
+      let newMove = game.makeMove(username, moveKey, myPriority);
+      moveSelected = true;
       if(newMove.doNotSend !== true) {
         sendGameMessage(socket, {
           label: "select_move",
@@ -95,16 +121,22 @@
         });
       } else {
         alert('You selected your move already...');
+        moveSelected = true; // jic it didn't get set before
       }
     }
   }
 
   function revealCurrentMoves() {
-    
+    game.revealRound();
+    movesRevealed = true;
+    sendGameMessage(socket, {
+      label: 'reveal_moves',
+      fromUsername: $state.snapshot(username),
+    });
   }
 
   function moveToNextRound() {
-
+    // game.goToNextTurn
   }
 
   function startGame() {
@@ -114,7 +146,8 @@
       game.startGame();
       sendGameMessage(socket, {
         label: 'start_game',
-        firstPlayer: usernameStr
+        firstPlayer: usernameStr,
+        fromUsername: $state.snapshot(username)
       });
     }
   }
@@ -127,38 +160,34 @@
   <h1>You Are: {displayName}</h1>
 {/if}
 
+{#if displayMoves}
+  {#each displayMoves as dm}
+    <p>{dm.moveKey} - {dm.player.displayName}</p>
+  {/each}
+{/if}
+
 {#if gameStarted}
   <div class="move-actions">
     <h3>Take a stance...</h3>
-    <MoveBtn moveCallback={() => selectMove('thrust')}>Thrust</MoveBtn>
-    <MoveBtn moveCallback={() => selectMove('feint')}>Feint</MoveBtn>
-    <MoveBtn moveCallback={() => selectMove('parry')}>Parry</MoveBtn>
+    <MoveBtn disabled={moveSelected} moveCallback={() => selectMove('thrust')}>Thrust</MoveBtn>
+    <MoveBtn disabled={moveSelected} moveCallback={() => selectMove('feint')}>Feint</MoveBtn>
+    <MoveBtn disabled={moveSelected} moveCallback={() => selectMove('parry')}>Parry</MoveBtn>
   </div>
   <div class="meta-actions">
     <h3>Go on then.</h3>
-    <MoveBtn moveCallback={revealCurrentMoves}>Reveal Moves</MoveBtn>
-    <MoveBtn moveCallback={moveToNextRound}>Move to Next Round</MoveBtn>
+    <MoveBtn disbabled={!revealReady && movesRevealed} moveCallback={revealCurrentMoves}>Reveal Moves</MoveBtn>
+    <MoveBtn disabled={!movesRevealed} moveCallback={moveToNextRound}>Move to Next Round</MoveBtn>
   </div>
 {/if}
 
 <div>
   {#if !gameStarted}
-  <MoveBtn moveCallback={startGame} disabled={game}>Start Game (I'm First Player)</MoveBtn>
+  <MoveBtn moveCallback={startGame} >Start Game (I'm First Player)</MoveBtn>
   {/if}
   <h2>Active Players</h2>
   <ul>
     {#each game.players as player (player.username)}
       <li style:background-color={whoHasPriority === player.username ? 'yellow' : 'transparent'}>{player.displayName}</li>
-    {/each}
-  </ul>
-</div>
-
-<div>
-  <h3>Log</h3>
-  <ul>
-    {#each game.log as l (l.timestamp)} 
-    {@const timestr = new Date(l.timestamp).toString() }
-    <li>{l.msg} ({timestr})</li>
     {/each}
   </ul>
 </div>

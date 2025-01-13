@@ -1,6 +1,6 @@
 <script>
-  let { moveCallback, children } = $props();
+  let { moveCallback, children, disabled = false } = $props();
 </script>
-<button onclick={moveCallback}>
+<button {disabled} onclick={moveCallback}>
   {@render children?.()}
 </button>
