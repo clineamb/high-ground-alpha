@@ -12,7 +12,7 @@
     turnIdx = $state(0)
     store = $state(null)
     started = $state(false)
-    priorityUser = $state('')
+    priorityPlayer = $state('')
   
     constructor() {
       if(browser) {
@@ -25,7 +25,7 @@
           this.turnIdx = storedGame.turnIdx;
           this.lastUpdated = storedGame.lastUpdated;
           this.started = storedGame.started;
-          this.priorityUser = storedGame.priorityUser;
+          this.priorityPlayer = storedGame.priorityPlayer;
           this.touch();
         }
       }
@@ -53,18 +53,22 @@
       }
     }
     setPriority(username) {
-      this.priorityUser = username;
+      this.priorityPlayer = username;
       this.updateTimestamp();
     }
     swapPriority() {
-      let nextPrio = this.players.filter(p => p.username !== this.priorityUser);
+      let nextPrio = this.players.filter(p => p.username !== this.priorityPlayer);
+      console.log('>> swap prio', nextPrio);
       if(nextPrio[0]) {
-        this.setPriority($state.snapshot(nextPrio[0]));
+        this.setPriority(nextPrio[0].username);
       } else {
         console.log('>> ERROR ANOTHER PLAYER NOT FOUND?');
       }
     }
     // PLAYER RELATED ===========
+    whoHasPriority() {
+      return this.priorityPlayer;
+    }
     findPlayer(username) {
       this.touch();
       return this.players.find(p => p.username === username);
@@ -128,8 +132,12 @@
       this.updateTimestamp();
     }
     // TURN PROGRESSION =========
-    updateTurnIdx() {
-      this.turnIdx++;
+    updateTurnIdx(setNum) {
+      if(setNum) {
+        this.turnIdx = setNum;
+      } else {
+        this.turnIdx++;
+      }
       this.updateTimestamp();
       return this.turnIdx;
     }
@@ -155,7 +163,7 @@
         lastUpdated: this.lastUpdated,
         started: this.started,
         // log: this.log,
-        priorityUser: this.priorityUser
+        priorityPlayer: this.priorityPlayer
       };
     }
     makeMoveObj(username, key, priority = false) {

@@ -33,9 +33,10 @@ export default function(io) {
             label: `broadcast:move_selected`
           });
         break;
+        case 'next_turn':
         case 'start_game':
         case 'sync_game':
-          case 'reveal_moves':
+        case 'reveal_moves':
           socket.broadcast.emit('message', {
             ...data,
             label: `broadcast:${data.label}`
@@ -44,7 +45,7 @@ export default function(io) {
         default:
           console.log('UNHANDLED:\n', socket.id, data);
       }
-    });
+    }); 
     socket.on('disconnect', data => {
       // log('disconnect', socket.id);
     });

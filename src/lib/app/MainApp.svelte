@@ -16,10 +16,9 @@
   let displayName = $state('');
   let username = $derived(displayName ? displayName.toLowerCase().replaceAll(' ', '_') : 'guest');
   let game = gameState();
-  let whoHasPriority = $derived(game.priorityUser);
-  let myPriority = $derived(whoHasPriority === $state.snapshot(username));
+  let myPriority = $derived(game.whoHasPriority() === username);
   let moveSelected = $state(false);
-  let revealReady = $derived(moveSelected && game.areMovesReady());
+  let areMovesReady = $state(false);
   let movesRevealed = $state(false);
   let displayMoves = $state([])
 
@@ -38,6 +37,7 @@
   function resetLocalRound() {
     moveSelected = false;
     movesRevealed = false;
+    areMovesReady = false;
   }
   
   function incomingMessageHandler(label, data, isBroadcast = false) {
@@ -58,6 +58,12 @@
         if(data.fromUsername !== username) {
           game.receiveMove(data.move);
         }
+        areMovesReady = game.areMovesReady();
+      break;
+      case 'next_turn':
+        game.setPriority(data.newPriorityPlayer);
+        game.updateTurnIdx();
+        resetLocalRound();
       break;
       case 'start_game':
         game.setPriority(data.firstPlayer);
@@ -88,6 +94,16 @@
       label: 'game_connection',
       user: getClientPlayerDetails(),
     });
+
+    if(game.started) {
+      if(game.areMovesReady()) {
+        moveSelected = true;
+      }
+      if(displayMoves.length > 0) {
+        movesRevealed = true;
+      }
+      areMovesReady = game.areMovesReady();
+    }
     // receive server messages and send events
     socket.on('message', message => injestGameMessage(socket, message, incomingMessageHandler));
   });
@@ -123,6 +139,7 @@
         alert('You selected your move already...');
         moveSelected = true; // jic it didn't get set before
       }
+      areMovesReady = game.areMovesReady();
     }
   }
 
@@ -136,7 +153,14 @@
   }
 
   function moveToNextRound() {
-    // game.goToNextTurn
+    game.goToNextTurn();
+    console.log(game.priorityPlayer);
+    resetLocalRound();
+    sendGameMessage(socket, {
+      label: 'next_turn',
+      fromUsername: $state.snapshot(username),
+      newPriorityPlayer: game.whoHasPriority(),
+    });
   }
 
   function startGame() {
@@ -160,7 +184,7 @@
   <h1>You Are: {displayName}</h1>
 {/if}
 
-{#if displayMoves}
+{#if displayMoves && movesRevealed}
   {#each displayMoves as dm}
     <p>{dm.moveKey} - {dm.player.displayName}</p>
   {/each}
@@ -175,7 +199,7 @@
   </div>
   <div class="meta-actions">
     <h3>Go on then.</h3>
-    <MoveBtn disbabled={!revealReady && movesRevealed} moveCallback={revealCurrentMoves}>Reveal Moves</MoveBtn>
+    <MoveBtn disabled={!areMovesReady} moveCallback={revealCurrentMoves}>Reveal Moves</MoveBtn>
     <MoveBtn disabled={!movesRevealed} moveCallback={moveToNextRound}>Move to Next Round</MoveBtn>
   </div>
 {/if}
@@ -187,7 +211,7 @@
   <h2>Active Players</h2>
   <ul>
     {#each game.players as player (player.username)}
-      <li style:background-color={whoHasPriority === player.username ? 'yellow' : 'transparent'}>{player.displayName}</li>
+      <li style:background-color={game.whoHasPriority() === player.username ? 'yellow' : 'transparent'}>{player.displayName}</li>
     {/each}
   </ul>
 </div>
