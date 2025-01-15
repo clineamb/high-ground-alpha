@@ -19,6 +19,7 @@
   let username = $derived(displayName ? displayName.toLowerCase().replaceAll(' ', '_') : 'guest');
   let game = gameState();
   let myPriority = $state(false);
+  let penaltyUsed = $state(false);
   let moveSelected = $state(false);
   let areMovesReady = $state(false);
   let movesRevealed = $state(false);
@@ -107,6 +108,7 @@
       moveSelected = game.didPlayerMakeMove(username);
       areMovesReady = game.areMovesReady();
       myPriority = doIHavePriority();
+      penaltyUsed = game.didPlayerUsePenalty(username);
 
       if(displayMoves.length > 0) {
         movesRevealed = true;
@@ -138,6 +140,10 @@
     if(socket) {
       let newMove = game.makeMove(username, moveKey, myPriority);
       moveSelected = true;
+      if(moveKey === 'penalty') {
+        game.usePenaltyMove(username);
+        penaltyUsed = true;
+      }
       if(newMove.doNotSend !== true) {
         sendGameMessage(socket, {
           label: "select_move",
@@ -210,9 +216,14 @@
   {#if gameStarted}
   <div>
     <h3>Make your move....</h3>
-    <MoveBtn disabled={moveSelected} moveCallback={() => selectMove('thrust')}>🤺 Thrust</MoveBtn>
-    <MoveBtn disabled={moveSelected} moveCallback={() => selectMove('feint')}>🍃 Feint</MoveBtn>
-    <MoveBtn disabled={moveSelected} moveCallback={() => selectMove('parry')}>⚔️ Parry</MoveBtn>
+    <p>
+      <MoveBtn disabled={moveSelected} moveCallback={() => selectMove('thrust')}>🤺 Thrust</MoveBtn>
+      <MoveBtn disabled={moveSelected} moveCallback={() => selectMove('feint')}>🍃 Feint</MoveBtn>
+      <MoveBtn disabled={moveSelected} moveCallback={() => selectMove('parry')}>⚔️ Parry</MoveBtn>
+    </p>
+    <p>
+      <MoveBtn disabled={!moveSelected || penaltyUsed } moveCallback={() => selectMove('penalty')}>🚩 Penalty Move (1/game)</MoveBtn>
+    </p>
   </div>
   {/if}
   <div>

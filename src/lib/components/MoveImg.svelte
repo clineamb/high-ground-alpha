@@ -1,7 +1,7 @@
 <script>
   let { moveKey } = $props();
 
-  let moveLabel = '';
+  let moveLabel = $state('');
 
   switch(moveKey) {
     case 'thrust':
@@ -12,6 +12,9 @@
     break;
     case 'parry':
       moveLabel = 'Parry';
+    break;
+    case 'penalty':
+      moveLabel = 'PENALTY!';
     break;
   }
 
@@ -34,6 +37,9 @@
     {/if}
     {#if moveKey === 'ready'}
       ✔️
+    {/if}
+    {#if moveKey === 'penalty'}
+      🚩
     {/if}
   </div>
   {#if moveLabel}

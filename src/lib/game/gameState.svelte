@@ -73,6 +73,7 @@
       let existingUser = this.players.find(p => p.username === userObj.username);
       if(!existingUser) {
         userObj.created = Date.now();
+        userObj.penaltyUsed = false;
         this.players.push(userObj);
         existingUser = userObj;
         this.addLog(`${userObj.displayName} joined.`, userObj.created);
@@ -119,6 +120,9 @@
       });
       if(!!!didPlayerMakeMove && !moveData?.doNotSend) {
         this.moves.push(moveData);
+        if(moveData.moveKey === 'penalty') {
+          this.usePenaltyMove(moveData.username);
+        }
         this.updateTimestamp();
       }
     }
@@ -134,6 +138,24 @@
         m.revealed = true;
       });
       this.updateTimestamp();
+    }
+    usePenaltyMove(username) {
+      let p = this.findPlayer(username);
+      if(p) {
+        p.penaltyUsed = true;
+        return true;
+      }
+      return false;
+    }
+    didPlayerUsePenalty(username) {
+      let p = this.findPlayer(username);
+      if(!p) {
+        return false;
+      }
+      if(typeof p?.penaltyUsed === 'undefined') {
+        p.penaltyUsed = false;
+      }
+      return p.penaltyUsed;
     }
     // TURN PROGRESSION =========
     updateTurnIdx(setNum) {
