@@ -104,7 +104,7 @@
     });
 
     if(game.started) {
-      if(game.areMovesReady()) {
+      if(game.didPlayerMakeMove(username)) {
         moveSelected = true;
       }
       if(displayMoves.length > 0) {
