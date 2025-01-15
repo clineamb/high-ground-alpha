@@ -1,5 +1,4 @@
 <script>
-  import App from '$lib/app/MainApp.svelte';
+  import '@picocss/pico/css/pico.min.css';
 </script>
-
-<App />
+<a href="/high-ground">High Ground</a>

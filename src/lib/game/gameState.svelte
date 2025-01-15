@@ -74,6 +74,7 @@
       if(!existingUser) {
         userObj.created = Date.now();
         userObj.penaltyUsed = false;
+        userObj.score = 0;
         this.players.push(userObj);
         existingUser = userObj;
         this.addLog(`${userObj.displayName} joined.`, userObj.created);

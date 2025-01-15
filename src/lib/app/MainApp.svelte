@@ -222,7 +222,7 @@
       <MoveBtn disabled={moveSelected} moveCallback={() => selectMove('parry')}>⚔️ Parry</MoveBtn>
     </p>
     <p>
-      <MoveBtn disabled={!moveSelected || penaltyUsed } moveCallback={() => selectMove('penalty')}>🚩 Penalty Move (1/game)</MoveBtn>
+      <MoveBtn disabled={moveSelected || penaltyUsed } moveCallback={() => selectMove('penalty')}>🚩 Penalty Move (1/game)</MoveBtn>
     </p>
   </div>
   {/if}
@@ -238,6 +238,11 @@
   </div>
 </div>
 
+<div class="container app">
+  <article>
+    <header><h3>Notes from the Dev</h3></header>
+  </article>
+</div>
 <style>
   .app {
     border-radius: 25px;
