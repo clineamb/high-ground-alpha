@@ -1,5 +1,5 @@
 <script>
-  import '@picocss/pico/css/pico.slate.min.css';
+  import '@picocss/pico/css/pico.orange.min.css';
 </script>
 
 <div class="layout-content">

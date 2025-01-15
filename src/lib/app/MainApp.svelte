@@ -191,14 +191,13 @@
 <div class="container app">
   <div class="grid">
     {#each game.players as player (player.username)}
-    {@const madeMove = game.didPlayerMakeMove(player.username)}
+    {@const move = game.getPlayerMove(player.username)}
       <PlayerCard
         player={player}
         hasPriority={game.whoHasPriority() === player.username}
-        move={game.getPlayerMove()}
+        {move}
         waitingOnReveal={areMovesReady}
         movesRevealed
-
       />
     {/each}
   </div>
@@ -207,61 +206,26 @@
 <div class="container app controls grid">
   <div>
     <h3>Make your move....</h3>
+    <MoveBtn disabled={moveSelected} moveCallback={() => selectMove('thrust')}>🤺 Thrust</MoveBtn>
+    <MoveBtn disabled={moveSelected} moveCallback={() => selectMove('feint')}>🍃 Feint</MoveBtn>
+    <MoveBtn disabled={moveSelected} moveCallback={() => selectMove('parry')}>⚔️ Parry</MoveBtn>
   </div>
   <div>
-    <h3>Game flow</h3>
+    <h3>Go on then...</h3>
+    {#if !myPriority}<p><em>Priority player swaps round.</em></p>{/if}
+    <MoveBtn disabled={!myPriority && !areMovesReady} moveCallback={revealCurrentMoves}>Reveal Moves</MoveBtn>
+    <MoveBtn disabled={!myPriority && !movesRevealed} moveCallback={moveToNextRound}>Move to Next Round</MoveBtn>
   </div>
 </div>
-
-<div class="container">
-  {#if !displayName}
-    <h1>Waiting on user input...</h1>
-  {:else}
-    <h1>You Are: {displayName}</h1>
-  {/if}
-
-  {#if displayMoves && movesRevealed}
-    {#each displayMoves as dm}
-      <p>{dm.moveKey} - {dm.player.displayName}</p>
-    {/each}
-  {/if}
-
-  {#if gameStarted}
-    <div class="move-actions">
-      <h3>Take a stance...</h3>
-      <MoveBtn disabled={moveSelected} moveCallback={() => selectMove('thrust')}>Thrust</MoveBtn>
-      <MoveBtn disabled={moveSelected} moveCallback={() => selectMove('feint')}>Feint</MoveBtn>
-      <MoveBtn disabled={moveSelected} moveCallback={() => selectMove('parry')}>Parry</MoveBtn>
-    </div>
-    <div class="meta-actions">
-      <h3>Go on then.</h3>
-      <MoveBtn disabled={!areMovesReady} moveCallback={revealCurrentMoves}>Reveal Moves</MoveBtn>
-      <MoveBtn disabled={!movesRevealed} moveCallback={moveToNextRound}>Move to Next Round</MoveBtn>
-    </div>
-  {/if}
-
-  <div>
-    {#if !gameStarted}
-    <MoveBtn moveCallback={startGame} >Start Game (I'm First Player)</MoveBtn>
-    {/if}
-    <h2>Active Players</h2>
-    <ul>
-      {#each game.players as player (player.username)}
-        <li style:background-color={game.whoHasPriority() === player.username ? 'yellow' : 'transparent'}>{player.displayName}</li>
-      {/each}
-    </ul>
-  </div>
-</div>
-
 
 <style>
   .app {
     border-radius: 25px;
-    padding: 2rem;
     max-width: 1000px;
     margin: 50px auto;
   }
   .controls {
+    padding: 2rem;
     border: 1px solid var(--pico-primary-border);
   }
 </style>

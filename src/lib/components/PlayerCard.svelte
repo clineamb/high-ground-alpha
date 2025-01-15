@@ -1,4 +1,5 @@
 <script>
+  import MoveImg from '$lib/components/MoveImg.svelte';
   let {
     hasPriority,
     move,
@@ -6,27 +7,29 @@
     player,
     waitingOnReveal,
   } = $props();
-
-  let _move = $state(move);
-  let madeMove = $state(_move !== null);
+  let madeMove = $state(move !== null);
 </script>
 
 <article>
   <header>
     <h1>
-      {#if hasPriority}<span>⚔️</span>{/if}
+      {#if hasPriority}<span>🎖️</span>{/if}
       <span>{player.displayName}</span>
     </h1>
   </header>
 
   <div class="move-card">
     <div>
-      {#if !madeMove && !movesRevealed}<em>Waiting on move...</em>{/if}
-      {#if madeMove && waitingOnReveal && !movesRevealed}
-        <em>Move Ready. Waiting to Reveal.</em>
+      {#if !madeMove}
+        <MoveImg moveKey="wait"/>
+        <em>Waiting on move...</em>
       {/if}
-      {#if movesRevealed}
-        hi
+      {#if madeMove && !waitingOnReveal}
+        <MoveImg moveKey="ready"/>
+        <em>Move Selected!</em>
+      {/if}
+      {#if movesRevealed && move?.revealed}
+        <MoveImg moveKey={move.moveKey} />
       {/if}
     </div>
   </div>

@@ -55,7 +55,6 @@
     }
     swapPriority() {
       let nextPrio = this.players.filter(p => p.username !== this.priorityPlayer);
-      console.log('>> swap prio', nextPrio);
       if(nextPrio[0]) {
         this.setPriority(nextPrio[0].username);
       } else {
