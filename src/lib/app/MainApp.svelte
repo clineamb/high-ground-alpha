@@ -104,14 +104,13 @@
     });
 
     if(game.started) {
-      if(game.didPlayerMakeMove(username)) {
-        moveSelected = true;
-      }
+      moveSelected = game.didPlayerMakeMove(username);
+      areMovesReady = game.areMovesReady();
+      myPriority = doIHavePriority();
+
       if(displayMoves.length > 0) {
         movesRevealed = true;
       }
-      areMovesReady = game.areMovesReady();
-      myPriority = doIHavePriority();
     }
     // receive server messages and send events
     socket.on('message', message => injestGameMessage(socket, message, incomingMessageHandler));
@@ -189,32 +188,42 @@
 </script>
 
 <div class="container app">
+  {#if gameStarted}
+  <h2>Round {game.turnIdx + 1}</h2>
   <div class="grid">
     {#each game.players as player (player.username)}
-    {@const move = game.getPlayerMove(player.username)}
       <PlayerCard
         player={player}
         hasPriority={game.whoHasPriority() === player.username}
-        {move}
-        waitingOnReveal={areMovesReady}
-        movesRevealed
+        move={game.getPlayerMove(player.username)}
       />
     {/each}
   </div>
+  {:else}
+  <article>
+    <h2><em>Waiting to start...</em></h2>
+  </article>
+  {/if}
 </div>
 
 <div class="container app controls grid">
+  {#if gameStarted}
   <div>
     <h3>Make your move....</h3>
     <MoveBtn disabled={moveSelected} moveCallback={() => selectMove('thrust')}>🤺 Thrust</MoveBtn>
     <MoveBtn disabled={moveSelected} moveCallback={() => selectMove('feint')}>🍃 Feint</MoveBtn>
     <MoveBtn disabled={moveSelected} moveCallback={() => selectMove('parry')}>⚔️ Parry</MoveBtn>
   </div>
+  {/if}
   <div>
     <h3>Go on then...</h3>
-    {#if !myPriority}<p><em>Priority player swaps round.</em></p>{/if}
-    <MoveBtn disabled={!myPriority && !areMovesReady} moveCallback={revealCurrentMoves}>Reveal Moves</MoveBtn>
-    <MoveBtn disabled={!myPriority && !movesRevealed} moveCallback={moveToNextRound}>Move to Next Round</MoveBtn>
+    {#if !gameStarted}
+    <MoveBtn moveCallback={startGame} >Start Game (I'm First Player)</MoveBtn>
+    {:else}
+      {#if !myPriority}<p><em>Priority player swaps round.</em></p>{/if}
+      <MoveBtn disabled={!myPriority || !areMovesReady} moveCallback={revealCurrentMoves}>Reveal Moves</MoveBtn>
+      <MoveBtn disabled={!myPriority && !movesRevealed} moveCallback={moveToNextRound}>Move to Next Round</MoveBtn>
+    {/if}
   </div>
 </div>
 
@@ -223,6 +232,7 @@
     border-radius: 25px;
     max-width: 1000px;
     margin: 50px auto;
+    text-align: center;
   }
   .controls {
     padding: 2rem;

@@ -3,11 +3,9 @@
   let {
     hasPriority,
     move,
-    movesRevealed,
     player,
-    waitingOnReveal,
   } = $props();
-  let madeMove = $state(move !== null);
+
 </script>
 
 <article>
@@ -20,15 +18,13 @@
 
   <div class="move-card">
     <div>
-      {#if !madeMove}
+      {#if move === null}
         <MoveImg moveKey="wait"/>
         <em>Waiting on move...</em>
-      {/if}
-      {#if madeMove && !waitingOnReveal}
+      {:else if move !== null && !move.revealed}
         <MoveImg moveKey="ready"/>
         <em>Move Selected!</em>
-      {/if}
-      {#if movesRevealed && move?.revealed}
+      {:else if move?.revealed}
         <MoveImg moveKey={move.moveKey} />
       {/if}
     </div>
