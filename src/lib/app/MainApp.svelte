@@ -8,15 +8,17 @@
     sendGameMessage
   } from '$lib/game/messages';
   import { gameState } from '$lib/game/gameState.svelte';
-  import MoveBtn from '$lib/components/MoveBtn.svelte';
 	import gameLogic from '$lib/hooks/game-logic';
+  // ui components
+  import MoveBtn from '$lib/components/MoveBtn.svelte';
+  import PlayerCard from '$lib/components/PlayerCard.svelte';
 
   let socket = $state(null);
   let userSockId = $state('unmounted');
   let displayName = $state('');
   let username = $derived(displayName ? displayName.toLowerCase().replaceAll(' ', '_') : 'guest');
   let game = gameState();
-  let myPriority = $derived(game.whoHasPriority() === username);
+  let myPriority = $state(false);
   let moveSelected = $state(false);
   let areMovesReady = $state(false);
   let movesRevealed = $state(false);
@@ -38,6 +40,10 @@
     moveSelected = false;
     movesRevealed = false;
     areMovesReady = false;
+  }
+
+  function doIHavePriority() {
+    return (game.whoHasPriority() === username);
   }
   
   function incomingMessageHandler(label, data, isBroadcast = false) {
@@ -63,6 +69,7 @@
       case 'next_turn':
         game.setPriority(data.newPriorityPlayer);
         game.updateTurnIdx();
+        myPriority = doIHavePriority();
         resetLocalRound();
       break;
       case 'start_game':
@@ -90,6 +97,7 @@
     }
     
     game.addPlayer(getClientPlayerDetails(), true);
+
     sendGameMessage(socket, {
       label: 'game_connection',
       user: getClientPlayerDetails(),
@@ -103,6 +111,7 @@
         movesRevealed = true;
       }
       areMovesReady = game.areMovesReady();
+      myPriority = doIHavePriority();
     }
     // receive server messages and send events
     socket.on('message', message => injestGameMessage(socket, message, incomingMessageHandler));
@@ -123,6 +132,7 @@
           'player': game.findPlayer(m.username)
         };
     });
+    areMovesReady = game.areMovesReady();
   });
 
   function selectMove(moveKey) {
@@ -154,8 +164,8 @@
 
   function moveToNextRound() {
     game.goToNextTurn();
-    console.log(game.priorityPlayer);
     resetLocalRound();
+    myPriority = doIHavePriority();
     sendGameMessage(socket, {
       label: 'next_turn',
       fromUsername: $state.snapshot(username),
@@ -178,46 +188,80 @@
 
 </script>
 
-{#if !displayName}
-  <h1>Waiting on user input...</h1>
-{:else}
-  <h1>You Are: {displayName}</h1>
-{/if}
-
-{#if displayMoves && movesRevealed}
-  {#each displayMoves as dm}
-    <p>{dm.moveKey} - {dm.player.displayName}</p>
-  {/each}
-{/if}
-
-{#if gameStarted}
-  <div class="move-actions">
-    <h3>Take a stance...</h3>
-    <MoveBtn disabled={moveSelected} moveCallback={() => selectMove('thrust')}>Thrust</MoveBtn>
-    <MoveBtn disabled={moveSelected} moveCallback={() => selectMove('feint')}>Feint</MoveBtn>
-    <MoveBtn disabled={moveSelected} moveCallback={() => selectMove('parry')}>Parry</MoveBtn>
-  </div>
-  <div class="meta-actions">
-    <h3>Go on then.</h3>
-    <MoveBtn disabled={!areMovesReady} moveCallback={revealCurrentMoves}>Reveal Moves</MoveBtn>
-    <MoveBtn disabled={!movesRevealed} moveCallback={moveToNextRound}>Move to Next Round</MoveBtn>
-  </div>
-{/if}
-
-<div>
-  {#if !gameStarted}
-  <MoveBtn moveCallback={startGame} >Start Game (I'm First Player)</MoveBtn>
-  {/if}
-  <h2>Active Players</h2>
-  <ul>
+<div class="container app">
+  <div class="grid">
     {#each game.players as player (player.username)}
-      <li style:background-color={game.whoHasPriority() === player.username ? 'yellow' : 'transparent'}>{player.displayName}</li>
+    {@const madeMove = game.didPlayerMakeMove(player.username)}
+      <PlayerCard
+        player={player}
+        hasPriority={game.whoHasPriority() === player.username}
+        move={game.getPlayerMove()}
+        waitingOnReveal={areMovesReady}
+        movesRevealed
+
+      />
     {/each}
-  </ul>
+  </div>
 </div>
 
+<div class="container app controls grid">
+  <div>
+    <h3>Make your move....</h3>
+  </div>
+  <div>
+    <h3>Game flow</h3>
+  </div>
+</div>
+
+<div class="container">
+  {#if !displayName}
+    <h1>Waiting on user input...</h1>
+  {:else}
+    <h1>You Are: {displayName}</h1>
+  {/if}
+
+  {#if displayMoves && movesRevealed}
+    {#each displayMoves as dm}
+      <p>{dm.moveKey} - {dm.player.displayName}</p>
+    {/each}
+  {/if}
+
+  {#if gameStarted}
+    <div class="move-actions">
+      <h3>Take a stance...</h3>
+      <MoveBtn disabled={moveSelected} moveCallback={() => selectMove('thrust')}>Thrust</MoveBtn>
+      <MoveBtn disabled={moveSelected} moveCallback={() => selectMove('feint')}>Feint</MoveBtn>
+      <MoveBtn disabled={moveSelected} moveCallback={() => selectMove('parry')}>Parry</MoveBtn>
+    </div>
+    <div class="meta-actions">
+      <h3>Go on then.</h3>
+      <MoveBtn disabled={!areMovesReady} moveCallback={revealCurrentMoves}>Reveal Moves</MoveBtn>
+      <MoveBtn disabled={!movesRevealed} moveCallback={moveToNextRound}>Move to Next Round</MoveBtn>
+    </div>
+  {/if}
+
+  <div>
+    {#if !gameStarted}
+    <MoveBtn moveCallback={startGame} >Start Game (I'm First Player)</MoveBtn>
+    {/if}
+    <h2>Active Players</h2>
+    <ul>
+      {#each game.players as player (player.username)}
+        <li style:background-color={game.whoHasPriority() === player.username ? 'yellow' : 'transparent'}>{player.displayName}</li>
+      {/each}
+    </ul>
+  </div>
+</div>
+
+
 <style>
-  div {
-    margin: 1rem 0;
+  .app {
+    border-radius: 25px;
+    padding: 2rem;
+    max-width: 1000px;
+    margin: 50px auto;
+  }
+  .controls {
+    border: 1px solid var(--pico-primary-border);
   }
 </style>

@@ -4,7 +4,6 @@
 
   export class GameState {
     clientPlayer = $state(null)
-    lastTouchTime = $state(null);
     lastUpdated = $state(null)
     log = $state([])
     moves = $state([])
@@ -26,7 +25,6 @@
           this.lastUpdated = storedGame.lastUpdated;
           this.started = storedGame.started;
           this.priorityPlayer = storedGame.priorityPlayer;
-          this.touch();
         }
       }
     
@@ -43,7 +41,6 @@
       }
       this.log.push({ msg, timestamp });
       this.log.sort((a, b) => b.timestamp - a.timestamp);
-      this.touch();
     }
     startGame() {
       if(!this.started) {
@@ -70,7 +67,6 @@
       return this.priorityPlayer;
     }
     findPlayer(username) {
-      this.touch();
       return this.players.find(p => p.username === username);
     }
     addPlayer(userObjStr, isClientPlayer = false) {
@@ -89,17 +85,26 @@
     }
     // MAKING MOVES ==========
     findMove(cb) {
-      this.touch();
       return this.moves.find(cb);
     }
     getCurrMoves() {
       return this.moves.filter(m => m.turn === this.turnIdx);
     }
+    getPlayerMove(username, turn = this.turnIdx) {
+      let move = this.findMove(m => {
+        return m.username === username && m.turn === turn
+      });
+      if(!move) {
+        return null;
+      }
+      return $state.snapshot(move);
+    }
+    didPlayerMakeMove(username, turn = this.turnIdx) {
+      return this.getPlayerMove(username, turn = this.turnIdx) !== null;
+    }
     makeMove(username, moveKey) {
       let moveObj = this.makeMoveObj(username, moveKey);
-      let didPlayerMakeMove = this.findMove(m => {
-        return m.username === username && m.turn === this.turnIdx
-      });
+      let didPlayerMakeMove = this.didPlayerMakeMove(username);
       if(!didPlayerMakeMove) {
         this.moves.push(moveObj);
         this.updateTimestamp();
@@ -145,11 +150,7 @@
       this.swapPriority();
       this.updateTurnIdx();
     }
-    touch() {
-      this.lastTouchTime = Date.now();
-    }
     updateTimestamp() {
-      this.touch();
       this.lastUpdated = Date.now();
     }
     // OBJECT BUILDERS ==========
