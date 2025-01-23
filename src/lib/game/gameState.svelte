@@ -125,7 +125,6 @@
     makeMove(username, moveKey) {
       let moveObj = this.makeMoveObj(username, moveKey);
       let didPlayerMakeMove = this.didPlayerMakeMove(username);
-      console.log('>>> DID', didPlayerMakeMove);
       if(!didPlayerMakeMove) {
         this.moves.push(moveObj);
         this.updateTimestamp();
@@ -136,10 +135,8 @@
       };
     }
     receiveMove(moveData) {
-      let didPlayerMakeMove = this.findMove(m => {
-        return m.username === moveData.username && m.turn === moveData.turnIdx
-      });
-      if(!!!didPlayerMakeMove && !moveData?.doNotSend) {
+      let didPlayerMakeMove = this.didPlayerMakeMove(moveData.username, moveData.turnIdx);
+      if(!didPlayerMakeMove && !moveData?.doNotSend) {
         this.moves.push(moveData);
         if(moveData.moveKey === 'penalty') {
           this.usePenaltyMove(moveData.username);
