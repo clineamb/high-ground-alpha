@@ -73,9 +73,22 @@
     findPlayer(username) {
       return this.players.find(p => p.username === username);
     }
+    removeSpectator() {
+      this.players = this.players.filter(p => p.username !== 'spectator');
+    }
     addPlayer(userObjStr, isClientPlayer = false) {
       const userObj = JSON.parse(userObjStr);
+      // don't do shit
       let existingUser = this.players.find(p => p.username === userObj.username);
+      if(userObj.username === 'spectator') {
+        return;
+      }
+      if(existingUser?.username === 'spectator') {
+        // remove the player
+        this.removeSpectator();
+        this.updateTimestamp();
+        return;
+      }
       if(!existingUser) {
         userObj.created = Date.now();
         userObj.penaltyUsed = false;
@@ -88,6 +101,7 @@
         this.clientPlayer = existingUser;
       }
       this.updateTimestamp();
+      return;
     }
     // MAKING MOVES ==========
     findMove(cb) {
@@ -111,6 +125,7 @@
     makeMove(username, moveKey) {
       let moveObj = this.makeMoveObj(username, moveKey);
       let didPlayerMakeMove = this.didPlayerMakeMove(username);
+      console.log('>>> DID', didPlayerMakeMove);
       if(!didPlayerMakeMove) {
         this.moves.push(moveObj);
         this.updateTimestamp();
@@ -143,7 +158,6 @@
     // REVEAL ==========
     revealRound() {
       let currMoves = this.getCurrMoves();
-      console.lg
       currMoves.forEach(m => {
         m.revealed = true;
       });
