@@ -27,6 +27,7 @@
 	},
 	"dependencies": {
 		"@picocss/pico": "^2.0.6",
+		"ngrok": "^5.0.0-beta.2",
 		"sveltekit-io": "^1.0.11",
 		"underscore": "^1.13.7"
 	}

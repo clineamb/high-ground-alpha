@@ -30,6 +30,10 @@
     deserialize(value) {
       return JSON.parse(value);
     }
+
+    expireLocalStore() {
+      localStorage.removeItem(this.key);
+    }
   }
 
   export function localStore(key, value) {

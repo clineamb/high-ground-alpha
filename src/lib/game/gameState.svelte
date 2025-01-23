@@ -1,6 +1,7 @@
 <script module>
   import { browser } from '$app/environment';
   import { localStore } from '$lib/components/localStore.svelte';
+  import { haveHoursPassed } from '$lib/services/timekit';
 
   export class GameState {
     clientPlayer = $state(null)
@@ -19,12 +20,16 @@
 
         let storedGame = this.store?.value;
         if(storedGame) {
-          this.players = storedGame.players;
-          this.moves = storedGame.moves;
-          this.turnIdx = storedGame.turnIdx;
-          this.lastUpdated = storedGame.lastUpdated;
-          this.started = storedGame.started;
-          this.priorityPlayer = storedGame.priorityPlayer;
+          if(haveHoursPassed(24, storedGame.lastUpdated)) {
+            this.newGame();
+          } else {
+            this.players = storedGame.players;
+            this.moves = storedGame.moves;
+            this.turnIdx = storedGame.turnIdx;
+            this.lastUpdated = storedGame.lastUpdated;
+            this.started = storedGame.started;
+            this.priorityPlayer = storedGame.priorityPlayer;
+          }
         }
       }
     
@@ -131,6 +136,10 @@
       let cms = this.getCurrMoves();
       return cms.length === this.players.length;
     }
+    haveMovesBeenRevealed() {
+      let cms = this.getCurrMoves();
+      return cms.every(m => m.revealed);
+    }
     // REVEAL ==========
     revealRound() {
       let currMoves = this.getCurrMoves();
@@ -198,6 +207,10 @@
         timestamp: Date.now(),
         turn: this.turnIdx
       };
+    }
+    // === clear
+    newGame() {
+      this.store.expireLocalStore();
     }
   }
 

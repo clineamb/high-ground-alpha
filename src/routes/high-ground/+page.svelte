@@ -1,6 +1,6 @@
 <script>
   import '@picocss/pico/css/pico.amber.min.css';
-  import App from '$lib/app/MainApp.svelte';
+  import App from '$lib/app/HighGroundApp.svelte';
 </script>
 
 <div class="layout-content">

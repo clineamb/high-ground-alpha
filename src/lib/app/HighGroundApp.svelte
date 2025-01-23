@@ -81,6 +81,10 @@
         movesRevealed = true;
         game.revealRound();
       break;
+      case 'force_game_reset':
+        game.newGame();
+        alert('Game reset by ' + data.fromUsername + '. Ready?');
+        forceNewGame();
       default:
         console.log('>> unhandled on client', data);
     }
@@ -191,6 +195,17 @@
     }
   }
 
+  function forceNewGame() {
+    game.newGame();
+    window.location.reload();
+  }
+  function forceNewGameEveryone() {
+    sendGameMessage(socket, {
+      label: 'force_game_reset',
+      fromUsername: $state.snapshot(username)
+    });
+    forceNewGame();
+  }
 </script>
 
 <div class="container app">
@@ -227,20 +242,31 @@
   </div>
   {/if}
   <div>
-    <h3>Go on then...</h3>
     {#if !gameStarted}
-    <MoveBtn moveCallback={startGame} >Start Game (I'm First Player)</MoveBtn>
+      <h2>Hello {displayName}!</h2>
+      <MoveBtn moveCallback={startGame} >Start Game (I'm First Player)</MoveBtn>
     {:else}
+      <h3>Go on then...</h3>
       {#if !myPriority}<p><em>Priority player swaps round.</em></p>{/if}
-      <MoveBtn disabled={!myPriority || !areMovesReady} moveCallback={revealCurrentMoves}>Reveal Moves</MoveBtn>
-      <MoveBtn disabled={!myPriority && !movesRevealed} moveCallback={moveToNextRound}>Move to Next Round</MoveBtn>
+      <MoveBtn
+        disabled={!myPriority || !areMovesReady}
+        moveCallback={revealCurrentMoves}>
+        Reveal Moves
+      </MoveBtn>
+      <MoveBtn
+        disabled={!myPriority || !movesRevealed}
+        moveCallback={moveToNextRound}>
+        Move to Next Round
+      </MoveBtn>
     {/if}
   </div>
 </div>
 
 <div class="container app">
   <article>
-    <header><h3>Notes from the Dev</h3></header>
+    <header><h3>Misc</h3></header>
+    <button onclick={forceNewGame}>Force New Game</button>
+    <button onclick={forceNewGameEveryone}>Force New For Everyone</button>
   </article>
 </div>
 <style>
