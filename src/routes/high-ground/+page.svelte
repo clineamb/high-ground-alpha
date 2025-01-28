@@ -4,10 +4,11 @@
   import App from '$lib/app/HighGroundApp.svelte';
   let { data } = $props();
   const isSpectator = data.isSpectator;
+  const moves = data.moves;
 </script>
 
 <div class="layout-content">
-  <App isSpectator={isSpectator}/>
+  <App {isSpectator} {moves}/>
 </div>
 
 <style>
