@@ -39,6 +39,11 @@
       (payload) => messageReceived(payload)
     )
     .on(
+      'postgres_changes',
+      { event: 'UPDATE', table: 'moves', schema: 'public' },
+      (payload) => messageReceived(payload)
+    )
+    .on(
       'broadcast',
       { event: 'Test message' },
       (payload) => messageReceived(payload)
