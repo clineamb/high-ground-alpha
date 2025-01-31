@@ -93,6 +93,26 @@ export async function POST({ request, cookies }) {
     resError = upData.error;
   }
 
+  // TODO
+  // if(action === 'update-player') {
+  //   const playerSelect = await supabase
+  //   .from('game')
+  //   .select('players')
+  //   .eq('id', currGameId)
+  //   .limit(1)
+  //   .single();
+
+  //   let newPlayers = '';
+  //   const pData = playerSelect.data;
+  //   if(!pData.players) {
+  //     newPlayers = clientData.playerName;
+  //   } else if(pData.players.indexOf(clientData.playerName) < 0) {
+  //     newPlayers = pData.players + ',' + clientData.playerName;
+  //   } else {
+  //     newPlayers = pData.players;
+  //   }
+  // }
+
   if(action === 'get-moves') {
     const movesRes = await supabase
       .from('moves')

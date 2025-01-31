@@ -12,7 +12,7 @@
   <header>
     <h1>
       {#if hasPriority}<span>🎖️</span>{/if}
-      <span>{plabel} - {playerName}</span>
+      <span>{playerName}</span>
     </h1>
   </header>
 

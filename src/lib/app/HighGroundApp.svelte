@@ -84,19 +84,19 @@
         gameState = payload.new;
         updateMoves();
       })
-    .on(
-      'broadcast',
-      { event: 'resetGame'},
-      async (payload) => {
-        // resetGame(payload.clearUsernames);
-        // window.location.reload();
-      })
+    // .on(
+    //   'broadcast',
+    //   { event: 'resetGame'},
+    //   async (payload) => {
+    //     // resetGame(payload.clearUsernames);
+    //     // window.location.reload();
+    //   })
     .subscribe((status, error) => {
       // console.log('>> STATUS?', status, error);
     });
 
     if(!isSpectator && browser) {
-      if(!displayName && !cookie.get('displayName') || cookie.get('displayName') === 'undefined') {
+      if(!displayName && !cookie.get('displayName') || cookie.get('displayName') === 'undefined' || cookie.get('displayName') === 'null') { // str versions because lmao
         displayName = prompt('Username');
         cookie.set('displayName', displayName);
       } else {

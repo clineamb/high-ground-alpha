@@ -42,9 +42,9 @@
     <img src={getPenaltyCard()} alt="Penalty!" />
     {/if}
   </div>
-  {#if moveLabel}
+  <!-- {#if moveLabel}
     <h3><em>{moveLabel}</em></h3>
-  {/if}
+  {/if} -->
 </div>
 
 <style>
