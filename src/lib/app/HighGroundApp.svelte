@@ -16,15 +16,13 @@
     game = {}
   } = $props();
 
-  const channelA = supabase.channel(`room-${gameId}`,  {
-    config: {
-      broadcast: { ack: true }
-    }
-  });
-
   // Simple function to log any messages we receive
   function messageReceived(payload) {
-    console.log('>> received', payload);
+    console.log('>> PAYLOAD', payload);
+
+    if(payload.eventType === 'UPDATE') {
+      
+    }
   }
 
   async function getApi(data = {}) {
@@ -52,18 +50,26 @@
     return response;
   }
 
+  
+  const channelA = supabase.channel(`room-${gameId}`,  {
+    config: {
+      broadcast: { ack: true }
+    }
+  });
+
+  ///// ===================
+
   let displayName = $state('');
   let username = $derived(displayName ? displayName.toLowerCase().replaceAll(' ', '_') : 'guest');
 
-  let gameStarted = true;
   let gameState = $state(game);
+  let gameStarted = $derived(gameState.game_started);
   let moveSelected = false;
   let myPriority = true;
   let penaltyUsed = false;
   let areMovesReady = true;
   let revealCurrentMoves = true;
   let movesRevealed = true;
-  let moveToNextRound = true;
 
   onMount(async () => {
     channelA
@@ -97,10 +103,20 @@
   });
 
   async function selectMove(moveName) {
-    const test = await postApi('make-move', {
+    const response = await postApi('make-move', {
       moveName,
       'playerName': username,
     });
+  }
+
+  async function startGame() {
+    const response = await postApi('start-game', {
+      'playerName': username,
+    });
+  }
+
+  async function moveToNextRound() {
+    const response = await postApi('next-round'); // should pass game id
   }
 
 </script>
@@ -150,7 +166,7 @@
       </p>
     </div>
     {/if}
-    <!-- <div>
+    <div>
       {#if !gameStarted}
         <h2>Hello {displayName}!</h2>
         <MoveBtn moveCallback={startGame} >Start Game (I'm First Player)</MoveBtn>
@@ -158,17 +174,17 @@
         <h3>Go on then...</h3>
         {#if !myPriority}<p><em>Priority player swaps round.</em></p>{/if}
         <MoveBtn
-          disabled={!myPriority || !areMovesReady}
+          disabled={false}
           moveCallback={revealCurrentMoves}>
           Reveal Moves
         </MoveBtn>
         <MoveBtn
-          disabled={!myPriority || !movesRevealed}
+          disabled={false}
           moveCallback={moveToNextRound}>
           Move to Next Round
         </MoveBtn>
       {/if}
-    </div> -->
+    </div>
   </div>
 
   <!-- <div class="container app">

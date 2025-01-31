@@ -32,12 +32,34 @@ export async function POST({ request, cookies }) {
 			.insert({
 				'move': moveName,
 				'player': playerName,
-				'game_id': 1
+				'game_id': 1 //lol
 			})
 			.select();
 
 		if(!error) {
 			return json(data, { status: 201 });
+		}
+		resError = error;
+	}
+
+	if(action === 'start-game') {
+		const { data, error } = await supabase
+			.from('game')
+			.update({ 'game_started': true })
+			.eq('id', 1);
+
+		if(!error) {
+			console.log('>> start-game data', data);
+			return json({ 'started': true }, { status: 201 });
+		}
+		resError = error;
+	}
+
+	if(action === 'next-round') {
+		const { data, error } = await supabase
+			.rpc('increment_current_round', { game_id: 1 });
+		if(!error) {
+			return json({ 'started': true }, { status: 201 });
 		}
 		resError = error;
 	}
