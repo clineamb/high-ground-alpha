@@ -1,7 +1,8 @@
 <script>
   import { onMount } from 'svelte';
-  import { page } from '$app/state';
+  import { browser } from '$app/environment';
   import cookie from 'js-cookie';
+  import localStore from '$lib/components/localStore.svelte';
   // ui components
   import MoveBtn from '$lib/components/MoveBtn.svelte';
   import PlayerCard from '$lib/components/PlayerCard.svelte';
@@ -53,9 +54,9 @@
   let moveSelected = $derived(!!getMove(username));
   let areMovesReady = $derived(roundMoves.length === activePlayers.length);
   let movesRevealed = $derived(roundMoves.every(m => m.revealed));
+  let penaltyUsed = $state(false);
 
   let myPriority = true;
-  let penaltyUsed = false;
   let revealCurrentMoves = true;
 
 
@@ -83,16 +84,29 @@
       // console.log('>> STATUS?', status, error);
     });
 
-    if(!isSpectator) {
+    if(!isSpectator && browser) {
       if(!displayName && !cookie.get('displayName')) {
         displayName = prompt('Username');
         cookie.set('displayName', displayName);
       } else {
         displayName = cookie.get('displayName');
       }
+      if(cookie.get('penaltyUsed')) {
+        penaltyUsed = cookie.get('penaltyUsed');
+      }
       addPlayer($state.snapshot(username));
     }
   });
+
+  $effect(() => {
+    cookie.set('penaltyUsed', penaltyUsed);
+  });
+
+  function usePenalty() {
+    if(browser) {
+      penaltyUsed = true;
+    }
+  }
 
   async function addPlayer(playerName) {
     const response = await postApi('add-player', { playerName });
@@ -173,7 +187,12 @@
         <MoveBtn disabled={moveSelected} moveCallback={() => selectMove('parry')}>⚔️ Parry</MoveBtn>
       </p>
       <p>
-        <MoveBtn disabled={moveSelected || penaltyUsed } moveCallback={() => selectMove('penalty')}>🚩 Penalty Move (1/game)</MoveBtn>
+        <MoveBtn
+          disabled={moveSelected || penaltyUsed }
+          moveCallback={() => {
+            usePenalty();
+            selectMove('penalty');
+          }}>🚩 Penalty Move (1/game)</MoveBtn>
       </p>
     </div>
     {/if}

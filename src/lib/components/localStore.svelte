@@ -3,10 +3,10 @@
 
   export class LocalStore {
     value = $state(null)
-    key = ''
+    #key = ''
 
     constructor(key, value) {
-      this.key = key;
+      this.#key = key;
       this.value = value;
 
       if(browser) {
@@ -21,6 +21,10 @@
       $effect(() => {
         localStorage.setItem(this.key, this.serialize(this.value));
       });
+    }
+
+    get key() {
+      return this.#key;
     }
 
     serialize(value) {
