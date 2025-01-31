@@ -42,10 +42,17 @@ export async function POST({ request, cookies }) {
       })
       .eq('id', currGameId);
 
-    if(!resetGameRes.error) {
+    const resetMovesRes = await supabase
+      .from('moves')
+      .update({
+        'game_id': 0 // placeholder game entry
+      })
+      .eq('game_id', currGameId);
+
+    if(!resetGameRes.error && !resetMovesRes.error) {
       return json({ 'started': true }, { status: 201 });
     }
-    resError = resetGameRes.error;
+    resError = resetGameRes.error || resetMovesRes.error;
   }
 
   if(action === 'next-round') {

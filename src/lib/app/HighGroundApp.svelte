@@ -184,11 +184,12 @@
 <div class="container app">
   {#if gameStarted}
   <div class="grid">
-    {#each activePlayers as playerName}
+    {#each activePlayers as playerName, index}
     {@const pmove = getMove(playerName)}
       <PlayerCard
         hasPriority={false}
         move={pmove}
+        plabel={index % 2 === 0 ? 'lp1' : 'rp1'}
         {playerName}
       />
     {/each}
@@ -227,7 +228,7 @@
     <div>
       {#if !gameStarted}
         <h2>Hello {displayName}!</h2>
-        <MoveBtn moveCallback={startGame} >Start Game (I'm First Player)</MoveBtn>
+        <MoveBtn moveCallback={startGame} >Start Game</MoveBtn>
       {:else}
         <h3>Go on then...</h3>
         {#if !myPriority}<p><em>Priority player swaps round.</em></p>{/if}

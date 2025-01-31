@@ -4,6 +4,7 @@
     hasPriority,
     move = { waiting: true },
     playerName,
+    plabel
   } = $props();
 </script>
 
@@ -11,20 +12,20 @@
   <header>
     <h1>
       {#if hasPriority}<span>🎖️</span>{/if}
-      <span>{playerName}</span>
+      <span>{plabel} - {playerName}</span>
     </h1>
   </header>
 
   <div class="move-card">
     <div>
       {#if move.waiting}
-        <MoveImg moveKey="wait"/>
+        <MoveImg {plabel} moveKey="wait"/>
         <em>Waiting on move...</em>
       {:else if move !== null && !move?.revealed}
-        <MoveImg moveKey="ready"/>
+        <MoveImg {plabel}  moveKey="ready"/>
         <em>Move Selected!</em>
       {:else if move?.revealed}
-        <MoveImg moveKey={move.move} />
+        <MoveImg {plabel} moveKey={move.move} />
       {/if}
     </div>
   </div>

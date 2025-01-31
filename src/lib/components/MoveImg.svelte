@@ -1,6 +1,6 @@
 <script>
-  let { moveKey } = $props();
-
+  import { getCardImage, getPenaltyCard } from '$lib/components/CardImages.svelte';
+  let { moveKey, plabel = 'lp1' } = $props();
   let moveLabel = $state('');
 
   switch(moveKey) {
@@ -24,13 +24,13 @@
 <div class="move">
   <div class="move-img">
     {#if moveKey === 'thrust'}
-      🤺
+      <img src={getCardImage(plabel, 'thrust')} alt="Thrust" />
     {/if}
     {#if moveKey === 'feint'}
-      🍃
+      <img src={getCardImage(plabel, 'feint')} alt="Feint" />
     {/if}
     {#if moveKey === 'parry'}
-      ⚔️
+      <img src={getCardImage(plabel, 'parry')} alt="Parry" />
     {/if}
     {#if moveKey === 'wait'}
       💭
@@ -39,7 +39,7 @@
       ✔️
     {/if}
     {#if moveKey === 'penalty'}
-      🚩
+    <img src={getPenaltyCard()} alt="Penalty!" />
     {/if}
   </div>
   {#if moveLabel}
