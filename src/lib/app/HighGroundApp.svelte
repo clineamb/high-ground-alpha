@@ -19,10 +19,6 @@
   // Simple function to log any messages we receive
   function messageReceived(payload) {
     console.log('>> PAYLOAD', payload);
-
-    if(payload.eventType === 'UPDATE') {
-      
-    }
   }
 
   async function getApi(data = {}) {
@@ -50,7 +46,6 @@
     return response;
   }
 
-  
   const channelA = supabase.channel(`room-${gameId}`,  {
     config: {
       broadcast: { ack: true }
@@ -87,9 +82,15 @@
       { event: 'UPDATE', table: 'moves', schema: 'public' },
       (payload) => messageReceived(payload)
     )
-    .on('presence', { event: 'sync' }, () => {
-      const newState = channelA.presenceState();
-      console.log('>>>>> sync', newState);
+    .on(
+      'postgres_changes', {
+        event: 'UPDATE',
+        table: 'game',
+        schema: 'public',
+        filter: `id=eq.${gameId}`
+      }, (payload) => {
+        messageReceived(payload);
+        game = payload.new;
     })
     .subscribe((status, error) => {
       console.log('>> STATUS?', status, error);
