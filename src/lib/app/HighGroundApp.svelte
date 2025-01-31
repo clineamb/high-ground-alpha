@@ -89,11 +89,10 @@
         schema: 'public',
         filter: `id=eq.${gameId}`
       }, (payload) => {
-        messageReceived(payload);
         gameState = payload.new;
     })
     .subscribe((status, error) => {
-      console.log('>> STATUS?', status, error);
+      // console.log('>> STATUS?', status, error);
     });
 
   onMount(async () => {
@@ -104,8 +103,13 @@
       } else {
         displayName = cookie.get('displayName');
       }
+      addPlayer($state.snapshot(username));
     }
   });
+
+  async function addPlayer(playerName) {
+    const response = await postApi('add-player', { playerName });
+  }
 
   async function selectMove(moveName) {
     const response = await postApi('make-move', {
@@ -141,10 +145,10 @@
   {:else}
   <article>
     <h2><em>Waiting to start...</em></h2>
-    <h3>Players...</h3>
+    <!-- <h3>Players...</h3>
     {#each gameState.players as player (player.username)}
     <p>{player.displayName}</p>
-    {/each}
+    {/each} -->
   </article>
   {/if}
 </div>
