@@ -5,7 +5,6 @@
     move = { waiting: true },
     playerName,
   } = $props();
-  console.log('>>>>>', move);
 </script>
 
 <article>
