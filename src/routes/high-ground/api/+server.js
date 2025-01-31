@@ -22,12 +22,31 @@ export async function makeMove() {
 
 export async function POST({ request, cookies }) {
 	const clientData = await request.json();
+	const { action } = clientData;
+	let resError = null;
 
-	console.log('POST', clientData);
+	console.log('api/server >>> POST\n', clientData, '\n====\n');
 
-	// const moveData = await database.makeMove(clientMoveData);
+	if(action === 'make-move') {
+		let { moveName, playerName } = clientData;
+		const { data, error } = await supabase
+			.from('moves')
+			.insert({
+				'move': moveName,
+				'player': playerName,
+				'game_id': 1
+			})
+			.select();
 
-	const moveData = {};
+		if(!error) {
+			return json(data, { status: 201 });
+		}
+		resError = error;
+	}
+
+	if(resError) {
+		return json(resError, { status: 201 }); // whatever
+	}
 
 	return json(moveData, { status: 201 });
 }
