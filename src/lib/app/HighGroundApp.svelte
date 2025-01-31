@@ -90,7 +90,7 @@
         filter: `id=eq.${gameId}`
       }, (payload) => {
         messageReceived(payload);
-        game = payload.new;
+        gameState = payload.new;
     })
     .subscribe((status, error) => {
       console.log('>> STATUS?', status, error);
