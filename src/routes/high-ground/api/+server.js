@@ -78,7 +78,7 @@ export async function POST({ request, cookies }) {
     if(!movesRes.error) {
       return json({ 'data': movesRes.data }, { status: 201 });
     }
-    movesRes = movesRes.error;
+    resError = movesRes.error;
   }
 
   if(action === 'reveal-moves') {
