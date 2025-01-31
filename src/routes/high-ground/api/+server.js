@@ -78,6 +78,8 @@ export async function POST({ request, cookies }) {
       newPlayers = clientData.playerName;
     } else if(pData.players.indexOf(clientData.playerName) > -1) {
       newPlayers = pData.players + ',' + clientData.playerName;
+    } else {
+      newPlayers = pData.players;
     }
 
     const upData = await supabase
