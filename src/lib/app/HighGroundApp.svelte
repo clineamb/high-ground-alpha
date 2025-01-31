@@ -71,8 +71,12 @@
   let revealCurrentMoves = true;
   let movesRevealed = true;
 
-  onMount(async () => {
-    channelA
+  channelA
+    .on(
+      'broadcast',
+      { event: 'Test message' },
+      (payload) => messageReceived(payload)
+    )
     .on(
       'postgres_changes',
       { event: 'INSERT', table: 'moves', schema: 'public' },
@@ -83,15 +87,15 @@
       { event: 'UPDATE', table: 'moves', schema: 'public' },
       (payload) => messageReceived(payload)
     )
-    .on(
-      'broadcast',
-      { event: 'Test message' },
-      (payload) => messageReceived(payload)
-    )
+    .on('presence', { event: 'sync' }, () => {
+      const newState = channelA.presenceState();
+      console.log('>>>>> sync', newState);
+    })
     .subscribe((status, error) => {
       console.log('>> STATUS?', status, error);
     });
 
+  onMount(async () => {
     if(!isSpectator) {
       if(!displayName && !cookie.get('displayName')) {
         displayName = prompt('Username');
@@ -120,13 +124,6 @@
   }
 
 </script>
-
-<ul>
-  {#each moves as m}
-    <li>{m.move} - {m.player}</li>
-  {/each}
-</ul>
-
 <div class="container app">
   {#if gameStarted}
   <div class="grid">
