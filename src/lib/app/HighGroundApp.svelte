@@ -89,7 +89,7 @@
       { event: 'resetGame'},
       async (payload) => {
         // resetGame(payload.clearUsernames);
-        window.location.reload();
+        // window.location.reload();
       })
     .subscribe((status, error) => {
       // console.log('>> STATUS?', status, error);

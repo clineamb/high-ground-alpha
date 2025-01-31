@@ -36,7 +36,7 @@ export async function POST({ request, cookies }) {
       .from('game')
       .update({ 
         'game_started': false,
-        'players': null,
+        'players': '',
         'priority_player': null,
         'current_round': 1
       })
