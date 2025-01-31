@@ -97,7 +97,8 @@ export async function POST({ request, cookies }) {
     const movesRes = await supabase
       .from('moves')
       .select()
-      .eq('round', parseInt(clientData.current_round));
+      .eq('round', parseInt(clientData.current_round))
+      .eq('game_id', parseInt(currGameId));
 
     if(!movesRes.error) {
       return json({ 'data': movesRes.data }, { status: 201 });
