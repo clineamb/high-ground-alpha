@@ -4,12 +4,16 @@
 	"version": "0.0.1",
 	"type": "module",
 	"scripts": {
-		"dev": "vite dev --host",
+		"dev": "vite dev",
+		"devhost": "vite dev --host",
 		"build": "vite build",
 		"preview": "vite preview",
 		"lint": "eslint . && prettier --check .",
 		"format": "prettier --write ."
 	},
+	"resolutions": {
+    "whatwg-url": "^13"
+  },
 	"devDependencies": {
 		"@eslint/compat": "^1.2.3",
 		"@sveltejs/adapter-auto": "^4.0.0",

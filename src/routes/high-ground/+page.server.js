@@ -1,10 +1,15 @@
 /** @type {import('./$types').PageLoad} */
 import { supabase } from "$lib/supabaseClient";
 
-export async function load() {
-  const result = await supabase.from("moves").select();
-  const { data } = result;
+export async function load({ url }) {
+  const gameId =  url.searchParams.get('gameid') || 1;
+  const result = await Promise.all([
+    supabase.from("moves").select(),
+    supabase.from("game").select().eq('id', gameId)
+  ]);
+  const [movesRes, gameRes] = result;
   return {
-    moves: data ?? [],
+    'moves': movesRes.data ?? [],
+    'game': gameRes.data[0] ?? {}
   };
 }

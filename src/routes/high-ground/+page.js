@@ -1,8 +1,12 @@
 /** @type {import('./$types').PageLoad} */
-export function load({ params, url, data }) {
+export async function load({ page, params, url, data }) {
 	let isSpectator = url.searchParams.get('spectator') === 'true';
+	let gameId = url.searchParams.get('id')  || '1';
+	
 	return {
 		isSpectator,
-		'moves': data.moves
+		gameId,
+		'moves': data.moves,
+		'game': data.game
 	};
 }

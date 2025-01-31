@@ -2,13 +2,23 @@
   import { onMount } from 'svelte';
   import { page } from '$app/state';
   import cookie from 'js-cookie';
-  import { gameState } from '$lib/game/gameState2.svelte';
   // ui components
   import MoveBtn from '$lib/components/MoveBtn.svelte';
   import PlayerCard from '$lib/components/PlayerCard.svelte';
   import { supabase } from '$lib/supabaseClient';
 
-  const channelA = supabase.channel('room-1',  {
+  let {
+    // qps
+    isSpectator = false,
+    gameId = 1,
+    // supa
+    moves = [],
+    game = {}
+  } = $props();
+
+  console.log('>> IN APP =======\n', moves, game);
+
+  const channelA = supabase.channel(`room-${gameId}`,  {
     config: {
       broadcast: { ack: true }
     }
@@ -16,13 +26,39 @@
 
   // Simple function to log any messages we receive
   function messageReceived(payload) {
-    console.log('>> received', payload)
+    console.log('>> received', payload);
   }
 
-  let { isSpectator, moves } = $props();
+  async function getApi(data = {}) {
+    let qStr = Object.keys(data).map(k => {
+      return `${encodeURIComponent(k)}=${encodeURIComponent(data[k])}`;
+    }).join('&');
+    const response = await fetch(`/high-ground/api?${qStr}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    return response;
+  }
+
+  async function postApi(action, data = {}) {
+    data.action = action;
+    const response = await fetch(`high-ground/api`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    return response;
+  }
+
   let displayName = $state('');
+  let username = $derived(displayName ? displayName.toLowerCase().replaceAll(' ', '_') : 'guest');
+
   let gameStarted = true;
-  let game = { turnIdx: 0 };
+  let gameState = $state(game);
   let moveSelected = false;
   let myPriority = true;
   let penaltyUsed = false;
@@ -31,7 +67,7 @@
   let movesRevealed = true;
   let moveToNextRound = true;
 
-  onMount(() => {
+  onMount(async () => {
     channelA
     .on(
       'postgres_changes',
@@ -62,20 +98,11 @@
     }
   });
 
-
-  async function apiPostMove(moveData) {
-    const response = await fetch('/high-ground/api/make-move', {
-      method: 'POST',
-      body: JSON.stringify(moveData),
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
-  }
-
   async function selectMove(moveName) {
-    const test = await apiPostMove({ moveName });
-    console.log(test);
+    const test = await postApi('make-move', {
+      moveName,
+      'playerName': username,
+    });
   }
 
 </script>
@@ -88,14 +115,13 @@
 
 <div class="container app">
   {#if gameStarted}
-  <h2>Round {game.turnIdx + 1}</h2>
   <div class="grid">
-    {#each game.players as player (player.username)}
+    {#each gameState.players as player (player.username)}
       {#if player.username !== 'spectator'}
         <PlayerCard
           player={player}
-          hasPriority={game.whoHasPriority() === player.username}
-          move={game.getPlayerMove(player.username)}
+          hasPriority={false}
+          move={moves[0]}
         />
       {/if}
     {/each}
@@ -104,7 +130,7 @@
   <article>
     <h2><em>Waiting to start...</em></h2>
     <h3>Players...</h3>
-    {#each game.players as player (player.username)}
+    {#each gameState.players as player (player.username)}
     <p>{player.displayName}</p>
     {/each}
   </article>

@@ -1,14 +1,11 @@
 <script>
-  
   import '@picocss/pico/css/pico.amber.min.css';
   import App from '$lib/app/HighGroundApp.svelte';
   let { data } = $props();
-  const isSpectator = data.isSpectator;
-  const moves = data.moves;
 </script>
 
 <div class="layout-content">
-  <App {isSpectator} {moves}/>
+  <App {...data} />
 </div>
 
 <style>

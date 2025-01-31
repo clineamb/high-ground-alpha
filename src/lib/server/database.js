@@ -1,11 +1,11 @@
 import { supabase } from '$lib/supabaseClient';
 
-export async function makeMove({ moveName }) {
+export async function makeMove() {
   const { data, error } = await supabase
     .from('moves')
     .insert({
       'move': moveName,
-      'player': 'beeb',
+      'player': playerName,
       'game_id': 1
     })
     .select();
