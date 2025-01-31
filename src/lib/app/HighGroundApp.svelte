@@ -113,6 +113,11 @@
     cookie.set('penaltyUsed', penaltyUsed);
   });
 
+  async function changeName() {    
+    displayName = prompt('Username');
+    cookie.set('displayName', displayName);
+  }
+
   function usePenalty() {
     if(browser) {
       penaltyUsed = true;
@@ -253,6 +258,7 @@
       <header><h3>Dev Controls</h3></header>
       <button onclick={resetGame}>Reset Game</button>
       <button onclick={newGameNames}>Force New Game / New Names</button>
+      {#if !gameStarted}<button onclick={changeName}>Change Name</button>{/if}
     </article>
   </div>
 {/if}
