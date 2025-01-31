@@ -20,10 +20,10 @@
 
   <div class="move-card">
     <div>
-      {#if move === null}
+      {#if !move}
         <MoveImg moveKey="wait"/>
         <em>Waiting on move...</em>
-      {:else if move !== null && !move.revealed}
+      {:else if move !== null && !move?.revealed}
         <MoveImg moveKey="ready"/>
         <em>Move Selected!</em>
       {:else if move?.revealed}

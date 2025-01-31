@@ -128,7 +128,7 @@
   }
 
   function getMove(un) {
-    return moves.find(m => m.player === un);
+    return roundMoves.find(m => m.player === un);
   }
 
 </script>
