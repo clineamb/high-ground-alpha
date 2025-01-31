@@ -88,7 +88,7 @@
       'broadcast',
       { event: 'resetGame'},
       async (payload) => {
-        resetGame(payload.clearUsernames);
+        // resetGame(payload.clearUsernames);
         window.location.reload();
       })
     .subscribe((status, error) => {
