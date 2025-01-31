@@ -16,8 +16,6 @@
     game = {}
   } = $props();
 
-  console.log('>> IN APP =======\n', moves, game);
-
   const channelA = supabase.channel(`room-${gameId}`,  {
     config: {
       broadcast: { ack: true }
@@ -109,7 +107,7 @@
 
 <ul>
   {#each moves as m}
-    <li>{m.move}</li>
+    <li>{m.move} - {m.player}</li>
   {/each}
 </ul>
 

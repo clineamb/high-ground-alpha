@@ -25,8 +25,6 @@ export async function POST({ request, cookies }) {
 	const { action } = clientData;
 	let resError = null;
 
-	console.log('api/server >>> POST\n', clientData, '\n====\n');
-
 	if(action === 'make-move') {
 		let { moveName, playerName } = clientData;
 		const { data, error } = await supabase
