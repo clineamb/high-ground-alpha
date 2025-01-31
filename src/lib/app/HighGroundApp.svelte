@@ -132,7 +132,7 @@
 <div class="container app">
   {#if gameStarted}
   <div class="grid">
-    {#each gameState.players as player (player.username)}
+    <!-- {#each gameState.players as player (player.username)}
       {#if player.username !== 'spectator'}
         <PlayerCard
           player={player}
@@ -140,7 +140,7 @@
           move={moves[0]}
         />
       {/if}
-    {/each}
+    {/each} -->
   </div>
   {:else}
   <article>
