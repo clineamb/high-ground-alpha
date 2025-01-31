@@ -3,8 +3,10 @@
   let {
     hasPriority,
     move,
-    player,
+    playerName,
   } = $props();
+
+  console.log('>> move', move);
 
 </script>
 
@@ -12,7 +14,7 @@
   <header>
     <h1>
       {#if hasPriority}<span>🎖️</span>{/if}
-      <span>{player.displayName}</span>
+      <span>{playerName}</span>
     </h1>
   </header>
 

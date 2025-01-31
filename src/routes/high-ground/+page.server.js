@@ -3,13 +3,21 @@ import { supabase } from "$lib/supabaseClient";
 
 export async function load({ url }) {
   const gameId =  url.searchParams.get('gameid') || 1;
-  const result = await Promise.all([
-    supabase.from("moves").select(),
-    supabase.from("game").select().eq('id', gameId)
-  ]);
-  const [movesRes, gameRes] = result;
+
+  const gameRes = await supabase
+    .from('game')
+    .select()
+    .eq('id', gameId)
+    .limit(1)
+    .single();
+  
+  const movesRes = await supabase
+    .from('moves')
+    .select()
+    .eq('round', parseInt(gameRes.data.current_round));
+
   return {
     'moves': movesRes.data ?? [],
-    'game': gameRes.data[0] ?? {}
+    'game': gameRes.data ?? {}
   };
 }

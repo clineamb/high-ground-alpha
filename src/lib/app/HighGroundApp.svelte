@@ -18,32 +18,19 @@
 
   // Simple function to log any messages we receive
   function messageReceived(payload) {
-    console.log('>> PAYLOAD', payload);
-  }
-
-  async function getApi(data = {}) {
-    let qStr = Object.keys(data).map(k => {
-      return `${encodeURIComponent(k)}=${encodeURIComponent(data[k])}`;
-    }).join('&');
-    const response = await fetch(`/high-ground/api?${qStr}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
-    return response;
+    // console.log('>> PAYLOAD', payload);
   }
 
   async function postApi(action, data = {}) {
     data.action = action;
-    const response = await fetch(`high-ground/api`, {
+    const response = await fetch(`/high-ground/api`, {
       method: 'POST',
       body: JSON.stringify(data),
       headers: {
         'Content-Type': 'application/json'
       }
     });
-    return response;
+    return response.json();
   }
 
   const channelA = supabase.channel(`room-${gameId}`,  {
@@ -59,43 +46,42 @@
 
   let gameState = $state(game);
   let gameStarted = $derived(gameState.game_started);
-  let moveSelected = false;
+  let activePlayers = $derived(gameState.players.trim().split(','));
+  let roundMoves = $state(moves);
+
+  let moveSelected = $derived(!!getMove(username));
+  let areMovesReady = $derived(roundMoves.length === activePlayers.length);
+  let movesRevealed = $derived(roundMoves.every(m => m.revealed));
+
   let myPriority = true;
   let penaltyUsed = false;
-  let areMovesReady = true;
   let revealCurrentMoves = true;
-  let movesRevealed = true;
 
-  channelA
-    .on(
-      'broadcast',
-      { event: 'Test message' },
-      (payload) => messageReceived(payload)
-    )
+
+  onMount(async () => {
+    channelA
     .on(
       'postgres_changes',
       { event: 'INSERT', table: 'moves', schema: 'public' },
-      (payload) => messageReceived(payload)
-    )
+      async (payload) => updateMoves())
     .on(
       'postgres_changes',
       { event: 'UPDATE', table: 'moves', schema: 'public' },
-      (payload) => messageReceived(payload)
-    )
+      async (payload) => updateMoves())
     .on(
       'postgres_changes', {
         event: 'UPDATE',
         table: 'game',
         schema: 'public',
         filter: `id=eq.${gameId}`
-      }, (payload) => {
+      }, async (payload) => {
         gameState = payload.new;
+        updateMoves();
     })
     .subscribe((status, error) => {
       // console.log('>> STATUS?', status, error);
     });
 
-  onMount(async () => {
     if(!isSpectator) {
       if(!displayName && !cookie.get('displayName')) {
         displayName = prompt('Username');
@@ -111,10 +97,23 @@
     const response = await postApi('add-player', { playerName });
   }
 
+  async function updateMoves(cr) {
+    const roundMovesData = await postApi('get-moves', {
+      current_round: $state.snapshot(gameState.current_round)
+    });
+    roundMoves = roundMovesData.data;
+  }
+
   async function selectMove(moveName) {
     const response = await postApi('make-move', {
-      moveName,
-      'playerName': username,
+      moveData: {
+        'move': moveName,
+        'player': $state.snapshot(username),
+        'round': $state.snapshot(gameState.current_round),
+        'priority': false,
+        'revealed': false,
+        'game_id': parseInt(gameId, 10)
+      }
     });
   }
 
@@ -128,19 +127,22 @@
     const response = await postApi('next-round'); // should pass game id
   }
 
+  function getMove(un) {
+    return moves.find(m => m.player === un);
+  }
+
 </script>
 <div class="container app">
   {#if gameStarted}
   <div class="grid">
-    <!-- {#each gameState.players as player (player.username)}
-      {#if player.username !== 'spectator'}
-        <PlayerCard
-          player={player}
-          hasPriority={false}
-          move={moves[0]}
-        />
-      {/if}
-    {/each} -->
+    {#each activePlayers as playerName}
+    {@const pmove = getMove(playerName)}
+      <PlayerCard
+        hasPriority={false}
+        move={pmove}
+        {playerName}
+      />
+    {/each}
   </div>
   {:else}
   <article>
