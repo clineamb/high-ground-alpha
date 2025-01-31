@@ -24,7 +24,7 @@
 
   async function postApi(action, data = {}) {
     data.action = action;
-    data.currGameId = gameId;
+    data.currGameId = gameId || 1;
     const response = await fetch(`/high-ground/api`, {
       method: 'POST',
       body: JSON.stringify(data),
@@ -48,7 +48,9 @@
 
   let gameState = $state(game);
   let gameStarted = $derived(gameState.game_started);
-  let activePlayers = $derived(gameState.players.trim().split(','));
+  let activePlayers = $derived(
+    !gameState.players ? '' : gameState.players.trim().split(',')
+  );
   let roundMoves = $state(moves);
 
   let moveSelected = $derived(!!getMove(username));
@@ -65,11 +67,13 @@
     .on(
       'postgres_changes',
       { event: 'INSERT', table: 'moves', schema: 'public' },
-      async (payload) => updateMoves())
+      async (payload) => updateMoves()
+    )
     .on(
       'postgres_changes',
       { event: 'UPDATE', table: 'moves', schema: 'public' },
-      async (payload) => updateMoves())
+      async (payload) => updateMoves()
+    )
     .on(
       'postgres_changes', {
         event: 'UPDATE',
@@ -79,20 +83,27 @@
       }, async (payload) => {
         gameState = payload.new;
         updateMoves();
-    })
+      })
+    .on(
+      'broadcast',
+      { event: 'resetGame'},
+      async (payload) => {
+        resetGame(payload.clearUsernames);
+        window.location.reload();
+      })
     .subscribe((status, error) => {
       // console.log('>> STATUS?', status, error);
     });
 
     if(!isSpectator && browser) {
-      if(!displayName && !cookie.get('displayName')) {
+      if(!displayName && !cookie.get('displayName') || cookie.get('displayName') === 'undefined') {
         displayName = prompt('Username');
         cookie.set('displayName', displayName);
       } else {
         displayName = cookie.get('displayName');
       }
       if(cookie.get('penaltyUsed')) {
-        penaltyUsed = cookie.get('penaltyUsed');
+        penaltyUsed = cookie.get('penaltyUsed') === 'true';
       }
       addPlayer($state.snapshot(username));
     }
@@ -106,6 +117,10 @@
     if(browser) {
       penaltyUsed = true;
     }
+  }
+
+  function getMove(un) {
+    return roundMoves.find(m => m.player === un);
   }
 
   async function addPlayer(playerName) {
@@ -138,18 +153,31 @@
     });
   }
 
+  async function moveToNextRound() {
+    const response = await postApi('next-round'); // should pass game id
+  }
+
   async function startGame() {
+    cookie.set('penaltyUsed', false);
+    await addPlayer($state.snapshot(username));
     const response = await postApi('start-game', {
       'playerName': username,
     });
   }
 
-  async function moveToNextRound() {
-    const response = await postApi('next-round'); // should pass game id
+  async function resetGame(clearUsernames = false) {
+    channelA.send({
+      type: 'broadcast',
+      event: 'resetGame',
+      payload: { clearUsernames }
+    });
+    cookie.set('penaltyUsed', false);
+    const response = await postApi('reset-game');
   }
 
-  function getMove(un) {
-    return roundMoves.find(m => m.player === un);
+  async function newGameNames() {
+    cookie.set('displayName');
+    await resetGame(true);
   }
 
 </script>
@@ -217,14 +245,13 @@
     </div>
   </div>
 
-  <!-- <div class="container app">
+  <div class="container app">
     <article>
       <header><h3>Dev Controls</h3></header>
-      <button onclick={newGameAndNewUsername}>Change Name & Force New Game</button>
-      <button onclick={forceNewGame}>Force New Game</button>
-      <button onclick={forceNewGameEveryone}>Force New For Everyone</button>
+      <button onclick={resetGame}>Reset Game</button>
+      <button onclick={newGameNames}>Force New Game / New Names</button>
     </article>
-  </div> -->
+  </div>
 {/if}
 <style>
   .app {

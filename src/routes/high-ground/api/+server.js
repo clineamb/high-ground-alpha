@@ -20,15 +20,32 @@ export async function POST({ request, cookies }) {
   }
 
   if(action === 'start-game') {
-    const { data, error } = await supabase
+    const startGameRes = await supabase
       .from('game')
       .update({ 'game_started': true })
-      .eq('id', 1);
+      .eq('id', currGameId);
 
-    if(!error) {
+    if(!startGameRes.error) {
       return json({ 'started': true }, { status: 201 });
     }
-    resError = error;
+    resError = startGameRes.error;
+  }
+
+  if(action === 'reset-game') {
+    const resetGameRes = await supabase
+      .from('game')
+      .update({ 
+        'game_started': false,
+        'players': null,
+        'priority_player': null,
+        'current_round': 1
+      })
+      .eq('id', currGameId);
+
+    if(!resetGameRes.error) {
+      return json({ 'started': true }, { status: 201 });
+    }
+    resError = resetGameRes.error;
   }
 
   if(action === 'next-round') {
@@ -44,7 +61,7 @@ export async function POST({ request, cookies }) {
     const playerSelect = await supabase
       .from('game')
       .select('players')
-      .eq('id', 1)
+      .eq('id', currGameId)
       .limit(1)
       .single();
     
@@ -61,7 +78,7 @@ export async function POST({ request, cookies }) {
     const upData = await supabase
       .from('game')
       .update({ 'players': newPlayers })
-      .eq('id', 1);
+      .eq('id', currGameId);
 
     if(!upData.error) {
       return json({ ...upData.data }, { status: 201 });

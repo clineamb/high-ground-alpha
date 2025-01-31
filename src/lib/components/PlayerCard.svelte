@@ -35,6 +35,9 @@
   header h1 {
     padding: 0.5rem;
   }
+  article {
+    max-width: 500px;
+  }
   article h1 {
     text-align: center;
   }
@@ -43,7 +46,6 @@
     height: 0;
     width: 100%;
     padding-bottom: 100%;
-    
   }
   .move-card > div {
     padding-top: 10%;
