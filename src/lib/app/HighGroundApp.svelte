@@ -43,8 +43,8 @@
 
   ///// ===================
 
-  let displayName = $state('');
-  let username = $derived(displayName ? displayName.toLowerCase().replaceAll(' ', '_') : 'guest');
+  let displayName = $state(isSpectator ? 'spectator_mode_guest' : '');
+  let username = $derived(displayName ? displayName.toLowerCase().replaceAll(' ', '_') : 'spectator_mode_guest');
 
   let gameState = $state(game);
   let gameStarted = $derived(gameState.game_started);
@@ -124,7 +124,9 @@
   }
 
   async function addPlayer(playerName) {
-    const response = await postApi('add-player', { playerName });
+    if(username !== 'spectator_mode_guest') {
+      const response = await postApi('add-player', { playerName });
+    }
   }
 
   async function updateMoves(cr) {
