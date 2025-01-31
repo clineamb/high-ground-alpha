@@ -23,6 +23,7 @@
 
   async function postApi(action, data = {}) {
     data.action = action;
+    data.currGameId = gameId;
     const response = await fetch(`/high-ground/api`, {
       method: 'POST',
       body: JSON.stringify(data),
@@ -116,6 +117,12 @@
       }
     });
   }
+  
+  async function revealMoves() {
+    const response = await postApi('reveal-moves', {
+      currentRound: $state.snapshot(gameState.current_round)
+    });
+  }
 
   async function startGame() {
     const response = await postApi('start-game', {
@@ -179,7 +186,7 @@
         {#if !myPriority}<p><em>Priority player swaps round.</em></p>{/if}
         <MoveBtn
           disabled={false}
-          moveCallback={revealCurrentMoves}>
+          moveCallback={revealMoves}>
           Reveal Moves
         </MoveBtn>
         <MoveBtn

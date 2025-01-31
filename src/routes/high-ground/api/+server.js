@@ -4,11 +4,10 @@ import qs from '$lib/utils/querystr';
 
 export async function POST({ request, cookies }) {
   const clientData = await request.json();
-  const { action } = clientData;
+  const { action, currGameId = 1 } = clientData;
   let resError = null;
 
   if(action === 'make-move') {
-    console.log('>> clientData', clientData);
     const makeMoveRes = await supabase
       .from('moves')
       .insert(clientData.moveData)
@@ -27,19 +26,18 @@ export async function POST({ request, cookies }) {
       .eq('id', 1);
 
     if(!error) {
-      console.log('>> start-game data', data);
       return json({ 'started': true }, { status: 201 });
     }
     resError = error;
   }
 
   if(action === 'next-round') {
-    const { data, error } = await supabase
-      .rpc('increment_current_round', { game_id: 1 });
-    if(!error) {
+    const nextRoundRes = await supabase
+      .rpc('increment_current_round', { game_id: currGameId });
+    if(!nextRoundRes.error) {
       return json({ 'started': true }, { status: 201 });
     }
-    resError = error;
+    resError = nextRoundRes.error;
   }
 
   if(action === 'add-player') {
@@ -77,16 +75,25 @@ export async function POST({ request, cookies }) {
       .select()
       .eq('round', parseInt(clientData.current_round));
 
-
-    console.log('>> HELLO????', movesRes);
-
     if(!movesRes.error) {
       return json({ 'data': movesRes.data }, { status: 201 });
     }
     movesRes = movesRes.error;
   }
 
+  if(action === 'reveal-moves') {
+    const revealRes = await supabase.rpc('reveal_moves', {
+      round_number: parseInt(clientData.currentRound),
+      current_game_id: parseInt(currGameId)
+    });
+    if(!revealRes.error) {
+      return json({ 'status': 'revealed'}, { status: 201 });
+    }
+    resError = revealRes.error;
+  }
+
   if(resError) {
+    console.log('>> RES ERROR', resError);
     return json(resError, { status: 201 }); // whatever
   }
 
